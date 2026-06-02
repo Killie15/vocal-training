@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PitchFlight - Gamified Professional Vocal Trainer & Tuner</title>
+  <script>
+    // Early HTML Escaper to prevent XSS in error reporting
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Early global error handler to capture any load/syntax errors in external files
+    window.onerror = function(message, source, lineno, colno, error) {
+      const details = error ? error.stack : `${source}:${lineno}:${colno}`;
+      console.error("[SYSTEM DEBUG] Error:", message, details);
+      // Stream error to backend diagnostics if running locally
+      try {
+        const userId = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')).id : '';
+        fetch('/api/diagnostics/log', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-Id': userId
+          },
+          body: JSON.stringify({ 
+            type: 'error', 
+            message: message, 
+            stack: details, 
+            timestamp: new Date().toISOString(), 
+            userAgent: navigator.userAgent 
+          })
+        });
+      } catch(e) {}
+      showVisualError('Error', message, details);
+      return false;
+    };
+
+    window.onunhandledrejection = function(event) {
+      const reason = event.reason || {};
+      const details = reason.stack || 'no stack';
+      console.error("[SYSTEM DEBUG] Promise Rejection:", reason.message || 'unknown', details);
+      try {
+        const userId = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')).id : '';
+        fetch('/api/diagnostics/log', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-Id': userId
+          },
+          body: JSON.stringify({ 
+            type: 'unhandledrejection', 
+            message: reason.message || 'unknown', 
+            stack: details, 
+            timestamp: new Date().toISOString(), 
+            userAgent: navigator.userAgent 
+          })
+        });
+      } catch(e) {}
+      showVisualError('Promise Rejection', reason.message || 'unknown', details);
+    };
+
+    function showVisualError(type, message, stack) {
+      // Guard visual banner: show only on localhost/127.0.0.1 or with ?debug query param
+      const isDebug = window.location.hostname === 'localhost' || 
+                      window.location.hostname === '127.0.0.1' || 
+                      new URLSearchParams(window.location.search).has('debug');
+      if (!isDebug) return;
+
+      let errDiv = document.getElementById('visual-error-banner');
+      if (!errDiv) {
+        errDiv = document.createElement('div');
+        errDiv.id = 'visual-error-banner';
+        errDiv.style.position = 'fixed';
+        errDiv.style.top = '10px';
+        errDiv.style.left = '10px';
+        errDiv.style.right = '10px';
+        errDiv.style.background = 'rgba(255, 30, 30, 0.95)';
+        errDiv.style.color = '#fff';
+        errDiv.style.padding = '15px';
+        errDiv.style.borderRadius = '10px';
+        errDiv.style.zIndex = '999999';
+        errDiv.style.fontSize = '12px';
+        errDiv.style.fontFamily = 'monospace';
+        errDiv.style.boxShadow = '0 0 20px rgba(0,0,0,0.5)';
+        errDiv.style.maxHeight = '250px';
+        errDiv.style.overflowY = 'auto';
+        
+        if (document.body) {
+          document.body.appendChild(errDiv);
+        } else {
+          document.addEventListener("DOMContentLoaded", () => document.body.appendChild(errDiv));
+        }
+      }
+      errDiv.innerHTML = `<strong>[SYSTEM DEBUG - ${escapeHTML(type)}]</strong><br>
+                          Message: ${escapeHTML(message)}<br>
+                          <pre style="margin-top:5px; white-space:pre-wrap; font-size:10px;">${escapeHTML(stack)}</pre>
+                          <button onclick="this.parentElement.remove()" style="margin-top:10px; background:#fff; color:#000; border:none; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:pointer;">Dismiss</button>`;
+    }
+  </script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <!-- Favicons and Apple Touch Icons for high spec compliance -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <!-- FontAwesome self-hosted stylesheet for full offline capabilities -->
+  <link rel="stylesheet" href="css/all.min.css">
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header>
+    <div class="header-container">
+      <div class="logo" id="logo-btn">
+        <i class="fa-solid fa-wind"></i>
+        <span>PitchFlight</span>
+      </div>
+      <nav id="main-nav" style="display: none;">
+        <span class="nav-link active" data-view="planner-view"><i class="fa-solid fa-calendar-check"></i> Daily Planner</span>
+        <span class="nav-link" data-view="dashboard-view"><i class="fa-solid fa-map"></i> Curriculum</span>
+        <span class="nav-link" data-view="warmups-view"><i class="fa-solid fa-wand-magic-sparkles"></i> Warmups</span>
+        <span class="nav-link" data-view="tuner-view"><i class="fa-solid fa-guitar"></i> Tuner</span>
+        <span class="nav-link" data-view="studio-view"><i class="fa-solid fa-microphone-lines"></i> Studio</span>
+        <span class="nav-link" data-view="sheet-view"><i class="fa-solid fa-scroll"></i> Sheet Music</span>
+        <span class="nav-link" data-view="uploader-view"><i class="fa-solid fa-music"></i> Karaoke</span>
+        <span class="nav-link" data-view="stats-view"><i class="fa-solid fa-chart-line"></i> Stats</span>
+        <span class="nav-link" data-view="profile-view"><i class="fa-solid fa-address-card"></i> Vocal Profile</span>
+        <span class="nav-link" data-view="character-view"><i class="fa-solid fa-user-astronaut"></i> Character</span>
+      </nav>
+      <!-- Offline Sync Indicator -->
+      <div id="sync-status-indicator" style="display: none; align-items: center; gap: 0.35rem; font-size: 0.8rem; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 20px; border: 1px solid var(--border-glass); margin-right: 1rem; color: var(--text-secondary);">
+        <i class="fa-solid fa-arrows-rotate" id="sync-status-icon"></i>
+        <span id="sync-status-text">Synced</span>
+      </div>
+      <div class="user-badge" id="user-badge" style="display: none;">
+        <div class="avatar" id="avatar-initial">S</div>
+        <div>
+          <div id="username-display" style="font-weight: 600;">Singer</div>
+          <div style="display: flex; gap: 0.8rem; align-items: center; margin-top: 0.1rem;">
+            <span class="level-indicator">Level <span id="user-level-val">1</span></span>
+            <span id="header-switch-profile-btn" style="font-size: 0.75rem; color: var(--neon-cyan); cursor: pointer; text-decoration: underline; font-weight: bold; text-shadow: var(--shadow-neon-cyan);"><i class="fa-solid fa-rotate"></i> Switch</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Workspace -->
+  <main>
+
+    <!-- 1. Welcome / Profile View -->
+    <section id="welcome-view" class="view-section active">
+      <div class="welcome-grid">
+        <div class="welcome-text">
+          <h1>Master Your Voice with <span>Real-Time Physics</span></h1>
+          <p>PitchFlight uses precise client-side audio analysis to track your pitch, score your vibrato, check your stability, and gamify your journey to becoming a professional singer.</p>
+          
+          <div class="glass-panel" style="max-width: 500px; margin-top: 1rem; display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Profile selector for existing users -->
+            <div id="profile-select-section" style="display: none;">
+              <h2 style="font-size: 1.3rem; margin-bottom: 0.8rem; font-weight: 700; color: var(--neon-cyan);"><i class="fa-solid fa-users"></i> Select Your Voice Profile</h2>
+              <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <select id="user-profile-select" style="flex: 1; padding: 0.5rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; border-radius: 8px; font-size: 0.9rem;">
+                  <!-- Options populated dynamically -->
+                </select>
+                <button id="profile-select-btn" class="btn btn-primary btn-sm" style="padding: 0.4rem 1rem;">Select</button>
+              </div>
+            </div>
+
+            <!-- Voice Matching Hum Identification -->
+            <div id="voice-identify-section" class="glass-panel" style="padding: 1rem; background: rgba(185, 39, 252, 0.04); border-color: rgba(185, 39, 252, 0.2); text-align: center;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--neon-purple);"><i class="fa-solid fa-microphone-lines"></i> Who Am I?</h3>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.8rem;">Hum a steady comfortable note for 3 seconds to auto-match your voice profile!</p>
+              <button id="profile-identify-btn" class="btn btn-accent" style="width: 100%; box-shadow: 0 0 15px rgba(185,39,252,0.4);" type="button">
+                <i class="fa-solid fa-microphone"></i> Hum to Identify Profile
+              </button>
+              
+              <!-- Hum identification feedback banner -->
+              <div id="identify-feedback" style="display: none; margin-top: 0.8rem; font-size: 0.85rem; font-weight: 600; padding: 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.25);">
+                <!-- matched feedback goes here -->
+              </div>
+            </div>
+
+            <!-- Profile Creation form -->
+            <div>
+              <h2 style="font-size: 1.3rem; margin-bottom: 0.8rem; font-weight: 700; color: var(--neon-cyan);"><i class="fa-solid fa-user-plus"></i> Create New Profile</h2>
+              <form id="profile-form" style="display: flex; flex-direction: column; gap: 0.8rem; margin: 0;">
+                <div class="form-group" style="margin: 0;">
+                  <label for="username-input">Stage Name</label>
+                  <input type="text" id="username-input" value="Singer" placeholder="Enter name..." maxlength="50" required>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label for="voice-type-select">Voice Register Preference</label>
+                  <select id="voice-type-select">
+                    <option value="Bass">Bass (Low Male: E2 - E4)</option>
+                    <option value="Tenor" selected>Tenor (High Male: C3 - C5)</option>
+                    <option value="Alto">Alto (Low Female: F3 - F5)</option>
+                    <option value="Soprano">Soprano (High Female: C4 - C6)</option>
+                    <option value="Custom">Calibrate My Own Range (Recommended)</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.4rem;">
+                  Create & Get Started <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </form>
+            </div>
+            <!-- PWA Install Banner -->
+            <div id="pwa-install-banner" class="glass-panel" style="display: none; padding: 1rem; background: rgba(0, 242, 254, 0.05); border-color: rgba(0, 242, 254, 0.2); text-align: center; margin-top: 1rem;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--neon-cyan);"><i class="fa-solid fa-cloud-arrow-down"></i> Play Offline</h3>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.8rem;">Install PitchFlight to your home screen for full offline vocal training & zero-latency play!</p>
+              <button id="pwa-install-btn" class="btn btn-primary" style="width: 100%; box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);" type="button">
+                Install App
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="welcome-visual text-center">
+          <div class="glass-panel" style="display: inline-block; padding: 2.5rem;">
+            <i class="fa-solid fa-microphone-lines" style="font-size: 5rem; background: var(--accent-magenta); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 15px rgba(185,39,252,0.3));"></i>
+            <h3 style="margin-top: 1.5rem; font-size: 1.3rem;">Interactive Vocal Analyzer</h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.5rem; max-width: 250px;">Calibrates directly to your biological vocal chords to ensure perfect scoring accuracy.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="features-list">
+        <div class="feature-item">
+          <i class="fa-solid fa-gamepad"></i>
+          <div>
+            <h3>Gamified Training Path</h3>
+            <p>100 progressive levels covering core techniques: pitch matching, agility runs, dynamics, and advanced vibrato waves.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-chart-simple"></i>
+          <div>
+            <h3>Professional Metrics</h3>
+            <p>Measures precise vocal jitter (breath support), transition times in milliseconds, and vibrato rates (5.5Hz - 6.5Hz).</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-music"></i>
+          <div>
+            <h3>Karaoke MIDI Importer</h3>
+            <p>Upload a MIDI file of your favorite song. The system automatically transposes the notes to fit your comfortable vocal range.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-guitar"></i>
+          <div>
+            <h3>Chromatic Tuner</h3>
+            <p>A built-in utility with a micro-cent needle gauge for tuning guitars, pianos, or checking static vocal stability.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Vocal Range Calibration View -->
+    <section id="calibration-view" class="view-section">
+      <div class="calibration-container">
+        <h1 style="font-weight: 800; font-size: 2.5rem;">Calibrate Your Voice</h1>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Sing your lowest comfortable note and highest comfortable note into the microphone to scale the game board to your biology.</p>
+
+        <div class="glass-panel calibration-card">
+          <h2 id="calibration-step-title">Voice Range Finder</h2>
+          <p id="calibration-step-desc" style="color: var(--text-secondary); max-width: 480px; margin: 0 auto;">Click the mic, wait for the 3-second countdown, then hum comfortably and slide your voice from your lowest comfortable note to your highest note. Sing freely for 10 seconds.</p>
+
+          <button class="mic-pulse-btn" id="calibration-mic-btn">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
+
+          <div class="pitch-bubble" id="calibration-pitch-display">
+            --
+          </div>
+
+          <!-- Progress Bar replacing Pips -->
+          <div style="width: 100%; max-width: 320px; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-glass); margin: 0.5rem 0;">
+            <div id="calibration-progress-bar" style="height: 100%; width: 0%; background: var(--primary-glow); transition: width 0.1s linear;"></div>
+          </div>
+
+          <div style="display: flex; gap: 2.5rem; margin-top: 1rem; text-align: left; justify-content: center; width: 100%;">
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; text-align: center;">Speaking Base</div>
+              <div id="calib-base-note" style="font-size: 1.4rem; font-weight: bold; color: var(--neon-cyan); text-align: center; margin-top: 0.2rem;">--</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; text-align: center;">Lowest Limit</div>
+              <div id="calib-low-note" style="font-size: 1.4rem; font-weight: bold; color: var(--neon-orange); text-align: center; margin-top: 0.2rem;">--</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; text-align: center;">Highest Limit</div>
+              <div id="calib-high-note" style="font-size: 1.4rem; font-weight: bold; color: var(--neon-purple); text-align: center; margin-top: 0.2rem;">--</div>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary" id="calib-next-btn" style="display: none; width: 200px;">
+            Next Step <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.5 Daily Planner / Workout Tracker View -->
+    <section id="planner-view" class="view-section active">
+      <div class="section-title">
+        <div>
+          <h1 style="font-weight: 800; color: var(--neon-cyan); text-shadow: var(--shadow-neon-cyan);">Daily Practice Planner</h1>
+          <p style="font-size: 1rem; color: var(--text-secondary); font-weight: 400; margin-top: 0.25rem;">Complete your daily workout to reach professional level in 3 to 6 months.</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <span style="font-size: 0.85rem; color: var(--text-muted);">Daily Target:</span>
+          <select id="planner-target-select" class="glass-select" style="width: 100px; padding: 0.3rem 0.5rem; border-radius: 4px;">
+            <option value="30">30 Mins</option>
+            <option value="60">60 Mins</option>
+            <option value="120" selected>120 Mins</option>
+            <option value="180">180 Mins</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="planner-grid">
+        <!-- Left Column: Checklist & Roadmap Timeline -->
+        <div class="planner-left">
+          <!-- Daily Checklist Card -->
+          <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; position: relative; overflow: hidden;">
+            <h2 style="margin-top: 0; font-size: 1.25rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; color: #fff;">
+              <i class="fa-solid fa-clipboard-list" style="color: var(--neon-cyan);"></i> Today's Workout Checklist
+            </h2>
+            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.2rem;">
+              <div class="planner-todo-item">
+                <input type="checkbox" id="todo-warmups" class="planner-checkbox">
+                <label for="todo-warmups" class="planner-todo-label">
+                  <strong>1. Vocal Warmups & Sirens</strong> (15 Mins)
+                  <span style="display: block; font-size: 0.75rem; color: var(--text-muted);">Diaphragm activation, sirens, and humming stability.</span>
+                </label>
+                <button class="btn btn-secondary btn-sm" onclick="switchView('warmups-view')" style="margin-left: auto;">Go</button>
+              </div>
+              <div class="planner-todo-item">
+                <input type="checkbox" id="todo-studio" class="planner-checkbox">
+                <label for="todo-studio" class="planner-todo-label">
+                  <strong>2. Studio Vocal Isolation Focus</strong> (30 Mins)
+                  <span style="display: block; font-size: 0.75rem; color: var(--text-muted);">Practice single pitch, triads, interval leaps, and vibrato.</span>
+                </label>
+                <button class="btn btn-secondary btn-sm" onclick="switchView('studio-view')" style="margin-left: auto;">Go</button>
+              </div>
+              <div class="planner-todo-item">
+                <input type="checkbox" id="todo-curriculum" class="planner-checkbox">
+                <label for="todo-curriculum" class="planner-todo-label">
+                  <strong>3. Curriculum Progression</strong> (45 Mins)
+                  <span style="display: block; font-size: 0.75rem; color: var(--text-muted);">Play standard level tracks and earn high-score stars.</span>
+                </label>
+                <button class="btn btn-secondary btn-sm" onclick="switchView('dashboard-view')" style="margin-left: auto;">Go</button>
+              </div>
+              <div class="planner-todo-item">
+                <input type="checkbox" id="todo-repertoire" class="planner-checkbox">
+                <label for="todo-repertoire" class="planner-todo-label">
+                  <strong>4. Repertoire & Songs</strong> (30 Mins)
+                  <span style="display: block; font-size: 0.75rem; color: var(--text-muted);">Practice custom song uploads and preset karaoke titles.</span>
+                </label>
+                <button class="btn btn-secondary btn-sm" onclick="switchView('uploader-view')" style="margin-left: auto;">Go</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6-Month Roadmap Timeline -->
+          <div class="glass-panel" style="padding: 1.5rem;">
+            <h2 style="margin-top: 0; font-size: 1.25rem; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; color: #fff;">
+              <i class="fa-solid fa-route" style="color: var(--neon-purple);"></i> Professional Vocal Roadmap (3-6 Months)
+            </h2>
+            <div class="roadmap-timeline" style="margin-top: 1.5rem;">
+              <div class="roadmap-stage active" id="roadmap-stage-1">
+                <div class="roadmap-dot">1</div>
+                <div class="roadmap-content">
+                  <h3 style="margin: 0; font-size: 0.95rem; color: var(--neon-cyan);">Stage 1: Core Foundation (Month 1-2)</h3>
+                  <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-secondary);">Unlock Levels 1-3 with 3 stars. Master intonation stability, diaphragm support, and holding straight sustained pitches.</p>
+                  <div class="roadmap-requirement" id="req-stage-1"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading status...</div>
+                </div>
+              </div>
+              <div class="roadmap-stage" id="roadmap-stage-2">
+                <div class="roadmap-dot">2</div>
+                <div class="roadmap-content">
+                  <h3 style="margin: 0; font-size: 0.95rem; color: #fff;">Stage 2: Agility & Registers (Month 3-4)</h3>
+                  <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-secondary);">Unlock Levels 4-6 with 3 stars. Blend chest/head voice transition zones (mix voice), and hit rapid octave/third leaps.</p>
+                  <div class="roadmap-requirement" id="req-stage-2"><i class="fa-solid fa-circle-question"></i> Locked</div>
+                </div>
+              </div>
+              <div class="roadmap-stage" id="roadmap-stage-3">
+                <div class="roadmap-dot">3</div>
+                <div class="roadmap-dot-last"></div>
+                <div class="roadmap-content">
+                  <h3 style="margin: 0; font-size: 0.95rem; color: #fff;">Stage 3: Artistry & Virtuosity (Month 5-6)</h3>
+                  <p style="margin: 0.2rem 0 0; font-size: 0.8rem; color: var(--text-secondary);">Unlock Levels 7-9 with 3 stars. Control vibrato rate (5-7Hz) & depth, master dynamic volume levels, and perform full songs.</p>
+                  <div class="roadmap-requirement" id="req-stage-3"><i class="fa-solid fa-circle-question"></i> Locked</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Active Clock & Calendar Heatmap -->
+        <div class="planner-right">
+          <!-- Active Practice Timer Dashboard -->
+          <div class="glass-panel" style="padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: bold; letter-spacing: 0.1em;">Daily Practice Session</div>
+            
+            <div id="planner-timer-display" style="font-size: 3.5rem; font-weight: 800; font-family: var(--font-mono); color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.1); margin: 0.8rem 0;">120:00</div>
+            
+            <!-- Voice Activity indicator -->
+            <div id="planner-voice-activity" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.05); padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(0,0,0,0.2);">
+              <span class="activity-indicator-dot" id="planner-voice-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555;"></span>
+              <span id="activity-status-text">Mic Off</span>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: center; width: 100%;">
+              <button class="btn btn-primary" id="planner-timer-toggle-btn" style="min-width: 130px; font-weight: 600;">
+                <i class="fa-solid fa-play"></i> Start Session
+              </button>
+              <button class="btn btn-secondary" id="planner-timer-reset-btn">Reset</button>
+            </div>
+            
+            <div style="margin-top: 1.2rem; text-align: left; width: 100%; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; font-size: 0.8rem; color: var(--text-secondary);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                <span>Active Singing Time:</span>
+                <strong id="planner-active-minutes-val" style="color: var(--neon-cyan);">0.0 mins</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Goal Progress:</span>
+                <strong id="planner-goal-pct-val">0%</strong>
+              </div>
+              <!-- Mini progress bar -->
+              <div style="background: rgba(255, 255, 255, 0.05); height: 6px; border-radius: 3px; width: 100%; margin-top: 0.5rem; overflow: hidden;">
+                <div id="planner-progress-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); border-radius: 3px; transition: width 0.3s ease;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calendar Heatmap Grid Card -->
+          <div class="glass-panel" style="padding: 1.5rem; text-align: center; width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; width: 100%;">
+              <h2 style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-calendar-days" style="color: var(--neon-cyan);"></i> Practice Heatmap (180 Days)
+              </h2>
+              <span id="planner-streak-count" style="font-size: 0.8rem; background: rgba(255, 170, 0, 0.1); border: 1px solid rgba(255,170,0,0.2); color: #ffaa00; padding: 0.15rem 0.5rem; border-radius: 12px; font-weight: bold; display: flex; align-items: center; gap: 0.25rem;">
+                <i class="fa-solid fa-fire"></i> 0 Day Streak
+              </span>
+            </div>
+
+            <!-- Calendar Container -->
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+              <div id="practice-contribution-map" class="contribution-grid" style="display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 12px); gap: 3px; overflow-x: auto; width: 100%; max-width: 480px; padding: 0.5rem; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.02);"></div>
+              
+              <!-- Map Legend -->
+              <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.4rem; width: 100%; max-width: 480px; margin-top: 0.8rem; font-size: 0.7rem; color: var(--text-muted);">
+                <span>Less</span>
+                <span style="background: rgba(255, 255, 255, 0.05); width: 10px; height: 10px; border-radius: 2px; display: inline-block;"></span>
+                <span style="background: rgba(0, 242, 254, 0.25); width: 10px; height: 10px; border-radius: 2px; display: inline-block;"></span>
+                <span style="background: rgba(0, 242, 254, 0.6); width: 10px; height: 10px; border-radius: 2px; display: inline-block;"></span>
+                <span style="background: rgba(185, 39, 252, 0.6); width: 10px; height: 10px; border-radius: 2px; display: inline-block;"></span>
+                <span style="background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); width: 10px; height: 10px; border-radius: 2px; display: inline-block;"></span>
+                <span>More</span>
+              </div>
+            </div>
+            
+            <div style="margin-top: 1.2rem; text-align: left; width: 100%; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem; display: flex; justify-content: space-around; font-size: 0.75rem; color: var(--text-secondary);">
+              <div>
+                <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Total Singing</span>
+                <strong id="planner-total-hours" style="font-size: 1rem; color: #fff;">0.0 hrs</strong>
+              </div>
+              <div style="border-left: 1px solid rgba(255,255,255,0.05); padding-left: 1.5rem;">
+                <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Goal Completion</span>
+                <strong id="planner-goal-days" style="font-size: 1rem; color: #fff;">0 days</strong>
+              </div>
+              <div style="border-left: 1px solid rgba(255,255,255,0.05); padding-left: 1.5rem;">
+                <span style="color: var(--text-muted); display: block; font-size: 0.7rem; text-transform: uppercase;">Roadmap Progress</span>
+                <strong id="planner-roadmap-completion" style="font-size: 1rem; color: #fff;">0%</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rest Alert Overlay Modal -->
+    <div id="rest-reminder-overlay" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 2, 6, 0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+      <div class="glass-panel" style="max-width: 420px; width: 90%; padding: 2rem; text-align: center; border: 1px solid rgba(0, 242, 254, 0.2); box-shadow: 0 0 30px rgba(0, 242, 254, 0.15); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div style="background: rgba(0, 242, 254, 0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--neon-cyan); margin-bottom: 1.2rem; border: 1px solid rgba(0, 242, 254, 0.3);">
+          <i class="fa-solid fa-droplet"></i>
+        </div>
+        <h2 style="margin: 0; color: #fff; font-size: 1.5rem; font-weight: bold; text-shadow: var(--shadow-neon-cyan);">Vocal Rest & Hydration!</h2>
+        <p style="color: var(--text-secondary); margin: 0.8rem 0 1.5rem; font-size: 0.9rem; line-height: 1.5;">
+          You've been singing actively for 30 minutes! Singing is physical exercise. To prevent strain and vocal fold fatigue, please take a <strong>5-minute vocal rest</strong> now. 
+          <br><br>
+          Drink some lukewarm water to stay hydrated! 💧
+        </p>
+        <div id="rest-timer-countdown" style="font-size: 2rem; font-family: var(--font-mono); color: var(--neon-cyan); font-weight: bold; margin-bottom: 1.5rem;">05:00</div>
+        <button id="rest-dismiss-btn" class="btn btn-primary" style="width: 100%; font-weight: bold;" disabled>Resting...</button>
+      </div>
+    </div>
+
+    <!-- 3. Dashboard / Curriculum Tree View -->
+    <section id="dashboard-view" class="view-section">
+      <div class="section-title">
+        <div>
+          <h1 style="font-weight: 800;">Your Vocal Training Path</h1>
+          <p style="font-size: 1rem; color: var(--text-secondary); font-weight: 400; margin-top: 0.25rem;">Unlock levels 1-100 to progress from Amateur to Vocal Virtuoso.</p>
+        </div>
+        <button class="btn btn-primary" id="dashboard-calibrate-btn">
+          <i class="fa-solid fa-sliders"></i> Recalibrate Range
+        </button>
+      </div>
+
+      <div class="curriculum-map" id="curriculum-map-container">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </section>
+
+    <!-- 4. Vocal Warmups & "Find Your Voice" View -->
+    <section id="warmups-view" class="view-section">
+      <h1 style="font-weight: 800; font-size: 2.5rem;">Resonance & registers Warmups</h1>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Quick interactive challenges to locate your resonant placements and find your real voice.</p>
+
+      <div class="warmups-grid">
+        <!-- Warmup 1: Siren Slide -->
+        <div class="glass-panel warmup-card text-center">
+          <h3><i class="fa-solid fa-arrows-up-down"></i> Siren Slide</h3>
+          <p>Slide your voice smoothly from your lowest comfortable note to your highest note. Traces a physical pitch curve to connect chest and head registers.</p>
+          <button class="btn btn-primary start-warmup-btn" data-warmup="siren">
+            Start Challenge
+          </button>
+        </div>
+
+        <!-- Warmup 2: Humming Stability -->
+        <div class="glass-panel warmup-card text-center">
+          <h3><i class="fa-solid fa-circle-nodes"></i> Humming Stability</h3>
+          <p>Hum a comfortable steady note. The engine measures vocal shakiness (jitter) and breath compression to identify your natural resonance point.</p>
+          <button class="btn btn-primary start-warmup-btn" data-warmup="humming">
+            Start Challenge
+          </button>
+        </div>
+
+        <!-- Warmup 3: Register Explorer -->
+        <div class="glass-panel warmup-card text-center">
+          <h3><i class="fa-solid fa-music"></i> Register Explorer</h3>
+          <p>Sing a pitch to find where your vocal break lies. The system dynamically reports whether you are using Chest Resonance, Mixed, or Head Voice/Falsetto.</p>
+          <button class="btn btn-primary start-warmup-btn" data-warmup="registers">
+            Start Explorer
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Chromatic Instrument & Voice Tuner View -->
+    <section id="tuner-view" class="view-section">
+      <h1 style="font-weight: 800; font-size: 2.5rem;">Instrument Tuner & Chord Analyzer</h1>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Tune strings or check if your instrument chords are being played and voiced correctly in real-time.</p>
+
+      <!-- Tuner Mode Switchers -->
+      <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+        <button class="btn btn-primary btn-sm" id="tuner-mode-chromatic-btn" style="padding: 0.5rem 1.25rem; font-size: 0.85rem;"><i class="fa-solid fa-guitar"></i> Instrument Tuner</button>
+        <button class="btn btn-secondary btn-sm" id="tuner-mode-chord-btn" style="padding: 0.5rem 1.25rem; font-size: 0.85rem;"><i class="fa-solid fa-circle-nodes"></i> Chord Analyzer</button>
+      </div>
+
+      <div class="tuner-grid">
+        <div class="glass-panel tuner-dial-card">
+          <!-- Monophonic Tuner Panel -->
+          <div id="tuner-monophonic-panel" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <!-- LED lights -->
+            <div class="tuner-leds">
+              <div class="led flat" id="tuner-led-flat"></div>
+              <div class="led tuned" id="tuner-led-tuned"></div>
+              <div class="led sharp" id="tuner-led-sharp"></div>
+            </div>
+
+            <!-- Needle gauge -->
+            <div class="tuner-gauge-container">
+              <div class="tuner-arc"></div>
+              <div class="tuner-ticks">
+                <!-- Cents ticks -->
+                <div class="tuner-tick-mark" style="transform: rotate(-45deg)"></div>
+                <div class="tuner-tick-mark" style="transform: rotate(-30deg)"></div>
+                <div class="tuner-tick-mark" style="transform: rotate(-15deg)"></div>
+                <div class="tuner-tick-mark center"></div>
+                <div class="tuner-tick-mark" style="transform: rotate(15deg)"></div>
+                <div class="tuner-tick-mark" style="transform: rotate(30deg)"></div>
+                <div class="tuner-tick-mark" style="transform: rotate(45deg)"></div>
+              </div>
+              <div class="tuner-needle" id="tuner-needle"></div>
+              <div class="tuner-dial-center"></div>
+            </div>
+
+            <!-- Note text displays -->
+            <div class="tuner-note-display text-center">
+              <div class="tuner-note-letter" id="tuner-note-val">--</div>
+              <div class="tuner-cents-deviation" id="tuner-cents-val">-- cents</div>
+              <div style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.95rem; margin-top: 0.5rem;" id="tuner-hz-val">-- Hz</div>
+              
+              <!-- Live Register & Dynamics Badges -->
+              <div style="display: flex; gap: 0.8rem; margin-top: 1rem; width: 100%; justify-content: center;">
+                <span id="tuner-register-badge" class="register-badge" style="background: rgba(185, 39, 252, 0.15); border: 1px solid var(--neon-purple); color: var(--neon-purple); text-shadow: var(--shadow-neon-purple); padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Register: --</span>
+                <span id="tuner-dynamics-badge" class="dynamics-badge" style="background: rgba(0, 242, 254, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); text-shadow: var(--shadow-neon-cyan); padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Dynamics: --</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Polyphonic Chord Panel (hidden by default) -->
+          <div id="tuner-polyphonic-panel" style="width: 100%; display: none; flex-direction: column; align-items: center; gap: 1.5rem; padding: 1.5rem 0;">
+            <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Detected Chord</div>
+            <div id="tuner-chord-name-val" style="font-size: 3.8rem; font-weight: 800; color: var(--neon-cyan); text-shadow: var(--shadow-neon-cyan); line-height: 1; min-height: 80px; display: flex; align-items: center; justify-content: center;">--</div>
+            
+            <div style="width: 100%; max-width: 280px; margin-top: 0.5rem;">
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.6rem; text-align: center;">Active Pitch Classes</div>
+              <div id="tuner-chord-notes-list" style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; min-height: 40px;">
+                <span style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); padding: 0.3rem 0.8rem; border-radius: 20px; font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted);">No notes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <h2 style="font-size: 1.5rem; font-weight: 700;">Tuner Controls</h2>
+          
+          <div id="tuner-control-desc-chromatic">
+            <p style="color: var(--text-secondary);">Click the start button to activate the microphone. Hold your instrument close to the microphone and pluck a single string. The gauge displays cents flat (left) or sharp (right).</p>
+          </div>
+          <div id="tuner-control-desc-chord" style="display: none;">
+            <p style="color: var(--text-secondary);">Strum a full chord on your guitar, ukulele, or piano. The analyzer maps frequency peaks across octaves to identify the chord type (Major, Minor, 7th) and lists all active notes.</p>
+          </div>
+          
+          <button class="btn btn-primary" id="tuner-toggle-btn" style="width: 100%;">
+            <i class="fa-solid fa-power-off"></i> Start Tuner
+          </button>
+
+          <div style="margin-top: 1rem;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Standard Instrument Reference:</h3>
+            <ul style="color: var(--text-secondary); font-size: 0.9rem; list-style-type: none; display: flex; flex-direction: column; gap: 0.5rem;">
+              <li><strong style="color: var(--neon-cyan);">Guitar (Standard):</strong> E2 (82Hz), A2 (110Hz), D3 (146Hz), G3 (196Hz), B3 (247Hz), E4 (329Hz)</li>
+              <li><strong style="color: var(--neon-purple);">Ukulele (Standard):</strong> G4 (392Hz), C4 (261Hz), E4 (329Hz), A4 (440Hz)</li>
+              <li><strong style="color: var(--neon-orange);">Violin (Standard):</strong> G3 (196Hz), D4 (293Hz), A4 (440Hz), E5 (659Hz)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Karaoke / Custom Song Mode View -->
+    <section id="uploader-view" class="view-section">
+      <h1 style="font-weight: 800; font-size: 2.5rem;">Karaoke Custom Song Uploader</h1>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Upload a MIDI file containing the lead vocal melody and sing along in game mode.</p>
+
+      <div class="tuner-grid">
+        <div class="glass-panel uploader-card">
+          <div class="uploader-dropzone" id="midi-dropzone">
+            <i class="fa-solid fa-file-arrow-up"></i>
+            <h3>Drag & Drop MIDI File Here</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">or click to browse locally (.mid, .midi)</p>
+            <input type="file" id="midi-file-input" accept=".mid,.midi" style="display: none;">
+          </div>
+          <div class="form-group" style="margin-top: 1.5rem;">
+            <label for="mp3-file-input">Backing Audio Track (Optional MP3/WAV)</label>
+            <input type="file" id="mp3-file-input" accept="audio/*" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); padding: 0.5rem; border-radius: 8px; color: var(--text-primary);">
+          </div>
+        </div>
+
+        <div class="glass-panel midi-presets">
+          <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Or Try Preloaded Karaoke Classics:</h2>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">No MIDI files on your device? Load one of these standard arrangements instantly:</p>
+
+          <div class="preset-song-list">
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Happy Birthday to You <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">A simple, familiar tune. Perfect for checking baseline pitch alignment.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="happy-birthday">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Twinkle Twinkle Little Star <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Tests larger interval steps (fifths) and steady note sustained holds.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="twinkle">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Amazing Grace <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Features beautiful pitch slides and opportunities for vibrato.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="amazing-grace">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Ode to Joy (Beethoven) <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Focuses on stepwise pitch precision, breath support, and sustained straight tones.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="ode-to-joy">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Row, Row, Row Your Boat <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">A light, syncopated melody testing rhythmic accuracy and quick note alignment.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="row-boat">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">London Bridge is Falling Down <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Explores descending step sequences and precise vocal resonance.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="london-bridge">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Frère Jacques (Brother John) <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Practice perfect fourth intervals and steady vocal timing.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="frere-jacques">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Scarborough Fair <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Explores minor scales, vocal modal registers, and breath support.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="scarborough-fair">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Danny Boy (Irish Folk) <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">A classic vocal challenge requiring wide dynamic range and registers transitions.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="danny-boy">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">La Cucaracha <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">A rapid, energetic melody testing quick pitch agility and note transitions.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="la-cucaracha">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Red River Valley <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Builds steady, sustained breathing and emotional warmth on a classic ballad.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="red-river">Load</button>
+            </div>
+
+            <div class="preset-song-item">
+              <div>
+                <h3 style="font-size: 1rem;">Auld Lang Syne <span style="font-size: 0.75rem; color: var(--text-muted);">(Excerpt)</span></h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Focuses on wider pentatonic skips, intervals accuracy, and transition control.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm play-preset-btn" data-preset="auld-lang-syne">Load</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Game Arena HUD & Canvas -->
+    <section id="game-view" class="view-section">
+      <div class="game-container">
+        <!-- HUD Overlay info -->
+        <div class="game-hud">
+          <div class="hud-item">
+            <div class="hud-label">Task:</div>
+            <span id="game-task-name">Level 1 - Perfect Match</span>
+          </div>
+          <div class="hud-item">
+            <div class="hud-label">Current Note:</div>
+            <span id="game-note-val">--</span>
+          </div>
+          <div class="hud-item">
+            <div class="hud-label">Accuracy:</div>
+            <span id="game-accuracy-val">0%</span>
+          </div>
+          <div class="hud-item">
+            <div class="hud-label">Score:</div>
+            <span id="game-score-val">0</span>
+          </div>
+          <div class="hud-item">
+            <div class="hud-label">Stars:</div>
+            <span id="game-stars-val"><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i></span>
+          </div>
+          <div class="hud-item" id="game-lives-hud">
+            <div class="hud-label">Lives:</div>
+            <span id="game-lives-val" style="color: var(--neon-red); font-size: 0.95rem; display: flex; gap: 0.2rem;"><i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i></span>
+          </div>
+          <div class="hud-item">
+            <div class="hud-label">Register:</div>
+            <span id="game-register-val" style="color: var(--neon-purple); font-weight: bold; text-transform: uppercase;">--</span>
+          </div>
+          <div class="hud-item">
+            <div class="hud-label">Dynamics:</div>
+            <span id="game-dynamics-val" style="color: var(--neon-cyan); font-weight: bold; text-transform: uppercase;">--</span>
+          </div>
+        </div>
+
+        <!-- 2D Canvas Play Area -->
+        <div class="game-arena-wrapper" style="position: relative;">
+          <canvas class="game-canvas" id="game-canvas"></canvas>
+          
+          <!-- Floating switcher to exit freeplay and start graded level -->
+          <button class="btn btn-accent" id="game-exit-freeplay-btn" style="display: none; position: absolute; top: 15px; right: 15px; z-index: 20; box-shadow: 0 0 20px rgba(185,39,252,0.6);">
+            <i class="fa-solid fa-circle-play"></i> Start Graded Level
+          </button>
+
+          <!-- Overlay screens inside game window -->
+          <div class="game-overlay-message" id="game-start-overlay">
+            <h2 id="game-title-overlay">Ready to Sing?</h2>
+            <p id="game-desc-overlay">Sit up straight, take a deep breath, and sing through the target tracks. Click the button to start.</p>
+            <div style="display: flex; gap: 1rem; margin-top: 0.5rem; justify-content: center; flex-wrap: wrap;">
+              <button class="btn btn-primary" id="game-start-btn">
+                <i class="fa-solid fa-circle-play"></i> Start Graded Level
+              </button>
+              <button class="btn btn-secondary" id="game-freeplay-btn">
+                <i class="fa-solid fa-graduation-cap"></i> Free Play / Tutorial
+              </button>
+            </div>
+          </div>
+          
+          <div class="game-overlay-message" id="game-over-overlay" style="display: none;">
+            <h2 style="color: var(--neon-red);"><i class="fa-solid fa-heart-crack"></i> Game Over</h2>
+            <p>You ran out of vocal energy! Take a deep breath, support your core, and try again.</p>
+            <button class="btn btn-primary" id="game-retry-btn">
+              <i class="fa-solid fa-rotate-left"></i> Try Again
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Waveform oscilloscope below canvas -->
+        <div class="glass-panel audio-visualizer-card">
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem; font-weight: 500;">LIVE INPUT WAVEFORM</div>
+          <canvas class="visualizer-canvas" id="waveform-canvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Vocal Diagnostics & Performance Summary -->
+    <section id="results-view" class="view-section">
+      <div class="results-header">
+        <h1 id="results-title">Level Cleared!</h1>
+        <p style="color: var(--text-secondary);" id="results-subtitle">Here is a professional diagnostic breakdown of your vocal physics:</p>
+        
+        <div class="score-badge-circle">
+          <div class="score-num" id="results-score">92</div>
+          <div class="score-lbl">Vocal Rank</div>
+        </div>
+        <div id="results-stars" style="color: var(--neon-orange); font-size: 1.5rem; margin-top: 0.5rem;">
+          <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+        </div>
+      </div>
+
+      <!-- Professional metrics layout -->
+      <div class="metrics-row">
+        <div class="glass-panel metric-card" id="card-metric-accuracy">
+          <div class="hud-label">Intonation Accuracy</div>
+          <div class="metric-val" id="res-metric-accuracy">94%</div>
+          <p style="font-size: 0.8rem; color: var(--text-muted);" id="lbl-metric-accuracy">Average error: 12 cents</p>
+        </div>
+
+        <div class="glass-panel metric-card" id="card-metric-stability">
+          <div class="hud-label">Pitch Jitter (Shake)</div>
+          <div class="metric-val" id="res-metric-stability">97%</div>
+          <p style="font-size: 0.8rem; color: var(--text-muted);" id="lbl-metric-stability">Micro-variance: 1.8Hz</p>
+        </div>
+
+        <div class="glass-panel metric-card" id="card-metric-agility">
+          <div class="hud-label">Vocal Agility</div>
+          <div class="metric-val" id="res-metric-agility">85%</div>
+          <p style="font-size: 0.8rem; color: var(--text-muted);" id="lbl-metric-agility">Avg onset transition: 84ms</p>
+        </div>
+
+        <div class="glass-panel metric-card" id="card-metric-vibrato">
+          <div class="hud-label">Vibrato Rating</div>
+          <div class="metric-val" id="res-metric-vibrato">N/A</div>
+          <p style="font-size: 0.8rem; color: var(--text-muted);" id="lbl-metric-vibrato">Straight Tone</p>
+        </div>
+      </div>
+
+      <!-- Written diagnostic review advice -->
+      <div class="feedback-diagnostic-box">
+        <h3><i class="fa-solid fa-stethoscope"></i> Vocal Coach Diagnostics</h3>
+        <p id="res-feedback-text">Excellent pitch stability on sustained notes. However, you tended to slide into the pitch during note transitions, indicating minor vocal scooping. Practice the Vocal Agility paths to speed up transition times.</p>
+      </div>
+
+      <!-- Comparison Chart -->
+      <div class="glass-panel pitch-analysis-graph-card">
+        <h3 style="font-weight: 700; margin-bottom: 1rem;"><i class="fa-solid fa-chart-line"></i> Sung Pitch Timeline vs. Target Score</h3>
+        <canvas class="pitch-graph-canvas" id="pitch-graph-canvas"></canvas>
+        <div style="display: flex; gap: 2rem; justify-content: center; margin-top: 1rem; font-size: 0.85rem;">
+          <span style="display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 14px; height: 4px; background: var(--neon-cyan);"></span> Target Melody</span>
+          <span style="display: flex; align-items: center; gap: 0.5rem;"><span style="display: inline-block; width: 14px; height: 4px; background: var(--neon-purple);"></span> Your Sung Pitch</span>
+        </div>
+      </div>
+
+      <div class="text-center" style="margin-top: 2rem; display: flex; gap: 1.5rem; justify-content: center;">
+        <button class="btn btn-secondary" id="results-dashboard-btn">
+          <i class="fa-solid fa-map"></i> Back to Map
+        </button>
+        <button class="btn btn-primary" id="results-retry-btn">
+          <i class="fa-solid fa-rotate-left"></i> Sing Again
+        </button>
+      </div>
+    </section>
+
+    <!-- 9. Historical Statistics & Logs view -->
+    <section id="stats-view" class="view-section">
+      <div class="section-title">
+        <div>
+          <h1 style="font-weight: 800;">Your Vocal Performance History</h1>
+          <p style="font-size: 1rem; color: var(--text-secondary); font-weight: 400; margin-top: 0.25rem;">Monitor your progress and technical improvement over time.</p>
+        </div>
+      </div>
+
+      <div class="glass-panel">
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem;">Completed Levels Log</h2>
+        <div style="overflow-x: auto;">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Date / Time</th>
+                <th>Challenge Name</th>
+                <th>Skill Focus</th>
+                <th>Stars</th>
+                <th>Score</th>
+                <th>Intonation</th>
+                <th>Stability</th>
+                <th>Vocal Coach Feedback</th>
+              </tr>
+            </thead>
+            <tbody id="history-log-rows">
+              <!-- Rendered dynamically -->
+              <tr>
+                <td colspan="8" class="text-center" style="color: var(--text-muted); padding: 2rem;">No levels completed yet. Start training on the Curriculum!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="text-align: center; margin-top: 1.5rem;">
+          <button id="stats-load-more-btn" class="btn btn-secondary" style="display: none;">Load More History</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8.5 Vocal Studio View -->
+    <section id="studio-view" class="view-section">
+      <div class="section-title">
+        <div>
+          <h1 style="font-weight: 800;">Vocal Practice Studio</h1>
+          <p style="font-size: 1rem; color: var(--text-secondary); font-weight: 400; margin-top: 0.25rem;">Practice notes, check your stability, and see precise real-time analytics.</p>
+        </div>
+      </div>
+
+      <div class="tuner-grid">
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <h2 style="font-size: 1.3rem; font-weight: 700;">Sandbox Analytics</h2>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="glass-panel" style="padding: 1rem; text-align: center; background: rgba(0,0,0,0.15);">
+              <div class="hud-label" style="font-size: 0.75rem;">Current Note</div>
+              <div id="studio-note-val" style="font-size: 2.2rem; font-weight: bold; color: var(--neon-cyan); margin-top: 0.25rem;">--</div>
+            </div>
+            
+            <div class="glass-panel" style="padding: 1rem; text-align: center; background: rgba(0,0,0,0.15);">
+              <div class="hud-label" style="font-size: 0.75rem;">Vocal Register</div>
+              <div id="studio-register-val" style="font-size: 1.1rem; font-weight: bold; color: var(--neon-purple); margin-top: 0.8rem; text-transform: uppercase;">Chest</div>
+            </div>
+          </div>
+
+          <!-- Stability Jitter Meter -->
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
+              <span style="color: var(--text-secondary);">Pitch Jitter (Stability)</span>
+              <span id="studio-jitter-pct" style="font-weight: bold; color: var(--neon-green);">100%</span>
+            </div>
+            <div style="height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-glass);">
+              <div id="studio-jitter-bar" style="height: 100%; width: 100%; background: var(--accent-success); transition: var(--transition-smooth);"></div>
+            </div>
+          </div>
+
+          <!-- Cents deviation bar -->
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
+              <span style="color: var(--text-secondary);">Intonation Cents Deviation</span>
+              <span id="studio-cents-offset" style="font-weight: bold; color: var(--text-primary);">-- cents</span>
+            </div>
+            <div style="height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; position: relative; overflow: hidden; border: 1px solid var(--border-glass);">
+              <div id="studio-cents-bar-flat" style="height: 100%; width: 0%; background: var(--accent-warning); position: absolute; right: 50%; top: 0;"></div>
+              <div id="studio-cents-bar-sharp" style="height: 100%; width: 0%; background: var(--accent-magenta); position: absolute; left: 50%; top: 0;"></div>
+              <div style="position: absolute; left: calc(50% - 1px); top: 0; bottom: 0; width: 2px; background: var(--neon-green);"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+              <span>Flat (-50c)</span>
+              <span>In Tune</span>
+              <span>Sharp (+50c)</span>
+            </div>
+          </div>
+
+          <!-- Dynamics Control Check -->
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem;">
+              <span style="color: var(--text-secondary);">Dynamic Volume Control (Dynamics)</span>
+              <span id="studio-dynamics-val" style="font-weight: bold; color: var(--neon-cyan);">--</span>
+            </div>
+            <!-- Horizontal visual volume indicator -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 6px; padding: 0.5rem; font-size: 0.75rem; position: relative;">
+              <span style="color: var(--text-muted); font-size: 0.65rem;">PIANO (Soft)</span>
+              <div style="background: rgba(255,255,255,0.05); height: 8px; border-radius: 4px; flex-grow: 1; position: relative; overflow: hidden; margin: 0 0.5rem;">
+                <div id="studio-dynamics-fill" style="width: 0%; height: 100%; background: var(--neon-cyan); transition: width 0.1s ease;"></div>
+                <!-- target dynamic zones marked with background borders -->
+                <div id="studio-dynamics-target-zone" style="position: absolute; top: 0; left: 8%; width: 17%; height: 100%; border: 1px dashed rgba(255,255,255,0.5); background: rgba(0, 242, 254, 0.15); display: none; border-radius: 2px;"></div>
+              </div>
+              <span style="color: var(--text-muted); font-size: 0.65rem;">FORTE (Loud)</span>
+            </div>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border-glass); margin: 0.5rem 0;">
+
+          <!-- Studio Session Stats Card -->
+          <div style="font-size: 0.9rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span>Average Accuracy:</span>
+              <strong id="studio-avg-acc" style="color: var(--text-primary);">0%</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Peak Hold Duration:</span>
+              <strong id="studio-max-hold" style="color: var(--text-primary);">0.0s</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Estimated Jitter (Shake):</span>
+              <strong id="studio-est-jitter" style="color: var(--text-primary);">-- Hz</strong>
+            </div>
+          </div>
+
+          <div id="studio-feedback" class="feedback-diagnostic-box" style="margin-bottom: 0; padding: 1rem; border-radius: 6px; display: none;">
+            <h4 style="font-size: 0.95rem; font-weight: bold; margin-bottom: 0.25rem;"><i class="fa-solid fa-stethoscope"></i> Practice Diagnostics:</h4>
+            <p id="studio-feedback-text" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
+          </div>
+        </div>
+
+        <!-- Scrolling Spectrogram Graph -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <h2 style="font-size: 1.3rem; font-weight: 700; margin: 0;">Live Timeline Graph</h2>
+              
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <label style="font-size: 0.85rem; font-weight: bold; margin: 0; color: var(--neon-cyan);"><i class="fa-solid fa-crosshairs"></i> Practice Mode:</label>
+                <select id="studio-focus-select" style="padding: 0.35rem 0.6rem; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; border-radius: 6px;">
+                  <option value="pitch" selected>Single Pitch Match</option>
+                  <option value="chord">Chord Triad Builder</option>
+                  <option value="interval">Interval Leap Precision</option>
+                  <option value="vibrato">Vibrato Control</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Parameters panel -->
+            <div class="glass-panel" style="padding: 0.6rem 1rem; background: rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; border-radius: 8px;">
+              <!-- Pitch match options -->
+              <div id="studio-param-pitch" style="display: flex; gap: 0.5rem; align-items: center;">
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">Target:</span>
+                <select id="studio-target-select" style="padding: 0.25rem 0.5rem; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; border-radius: 4px;">
+                  <option value="-1">Free Sing (No Target)</option>
+                  <option value="55">G3 (196.0Hz)</option>
+                  <option value="60" selected>C4 (261.6Hz)</option>
+                  <option value="64">E4 (329.6Hz)</option>
+                  <option value="67">G4 (392.0Hz)</option>
+                  <option value="72">C5 (523.3Hz)</option>
+                </select>
+                <button id="studio-play-guide-btn" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" type="button" title="Play guide pitch"><i class="fa-solid fa-volume-high"></i> Play Target</button>
+              </div>
+
+              <!-- Chord options -->
+              <div id="studio-param-chord" style="display: none; gap: 0.5rem; align-items: center;">
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">Target Chord:</span>
+                <select id="studio-chord-select" style="padding: 0.25rem 0.5rem; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; border-radius: 4px;">
+                  <option value="C-Maj" selected>C Major (C4 - E4 - G4)</option>
+                  <option value="G-Maj">G Major (G3 - B3 - D4)</option>
+                  <option value="A-Min">A Minor (A3 - C4 - E4)</option>
+                  <option value="F-Maj">F Major (F3 - A3 - C4)</option>
+                </select>
+                <button id="studio-play-chord-btn" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" type="button" title="Play guide arpeggio"><i class="fa-solid fa-volume-high"></i> Play Arpeggio</button>
+              </div>
+
+              <!-- Interval options -->
+              <div id="studio-param-interval" style="display: none; gap: 0.5rem; align-items: center;">
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">Target Leap:</span>
+                <select id="studio-interval-select" style="padding: 0.25rem 0.5rem; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; border-radius: 4px;">
+                  <option value="3" selected>Major Third (C4 to E4)</option>
+                  <option value="5">Perfect Fifth (C4 to G4)</option>
+                  <option value="8">Perfect Octave (C4 to C5)</option>
+                </select>
+                <button id="studio-play-interval-btn" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" type="button" title="Play interval reference"><i class="fa-solid fa-volume-high"></i> Play Interval</button>
+              </div>
+
+              <!-- Vibrato options -->
+              <div id="studio-param-vibrato" style="display: none; gap: 0.5rem; align-items: center;">
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">Anchor Note:</span>
+                <select id="studio-vibrato-select" style="padding: 0.25rem 0.5rem; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; border-radius: 4px;">
+                  <option value="55">G3 (196.0Hz)</option>
+                  <option value="60" selected>C4 (261.6Hz)</option>
+                  <option value="64">E4 (329.6Hz)</option>
+                  <option value="67">G4 (392.0Hz)</option>
+                </select>
+                <button id="studio-play-vibrato-btn" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" type="button" title="Play anchor pitch"><i class="fa-solid fa-volume-high"></i> Play Anchor</button>
+              </div>
+
+              <!-- Real-time dynamic coaching guide indicator -->
+              <div id="studio-mode-guide" style="font-size: 0.8rem; color: var(--neon-cyan); font-weight: bold;">
+                Pitch Match: Sing and lock onto the target line!
+              </div>
+            </div>
+          </div>
+          
+          <canvas id="studio-timeline-canvas" style="width: 100%; height: 260px; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-glass); border-radius: 12px; display: block;"></canvas>
+
+          <button class="btn btn-primary" id="studio-toggle-btn" style="width: 100%;">
+            <i class="fa-solid fa-microphone"></i> Start Practice
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8.75 Sheet Music Practice Arena -->
+    <section id="sheet-view" class="view-section">
+      <div class="section-title">
+        <div>
+          <h1 style="font-weight: 800;">Sheet Music Practice Arena</h1>
+          <p style="font-size: 1rem; color: var(--text-secondary); font-weight: 400; margin-top: 0.25rem;">Sing melody notes and strum Ukulele chords while reading standard sheet notation.</p>
+        </div>
+      </div>
+
+      <div class="tuner-grid" style="grid-template-columns: 1fr;">
+        <!-- Controls & Live HUD -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem;">
+          <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+              <label style="font-size: 0.9rem; font-weight: 600; margin: 0;">Select Sheet Exercise:</label>
+              <select id="sheet-song-select" style="padding: 0.4rem 1rem; font-size: 0.9rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); color: #fff; border-radius: 8px;">
+                <option value="amazing-grace">Amazing Grace (G Major - Ukulele Chords: G, C, D, Em)</option>
+                <option value="happy-birthday">Happy Birthday (C Major - Ukulele Chords: C, G, F)</option>
+                <option value="twinkle">Twinkle Twinkle (C Major - Ukulele Chords: C, F, G)</option>
+                <option value="auld-lang-syne">Auld Lang Syne (C Major - Ukulele Chords: F, C, G, Am)</option>
+              </select>
+              <button class="btn btn-primary" id="sheet-toggle-btn">
+                <i class="fa-solid fa-microphone"></i> Start Practice
+              </button>
+              <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; font-weight: 500; margin: 0 0.5rem; user-select: none;">
+                <input type="checkbox" id="sheet-guide-checkbox" style="width: 16px; height: 16px; accent-color: var(--neon-cyan); cursor: pointer;">
+                <span>Play Reference Pitch</span>
+              </label>
+            </div>
+            
+            <!-- Real-time HUD stats -->
+            <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
+              <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-glass); padding: 0.4rem 1rem; border-radius: 8px; text-align: center; min-width: 100px;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Voice Pitch</div>
+                <div id="sheet-live-note" style="font-size: 1.1rem; font-weight: bold; color: var(--neon-cyan);">--</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-glass); padding: 0.4rem 1rem; border-radius: 8px; text-align: center; min-width: 100px;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Ukulele Chord</div>
+                <div id="sheet-live-chord" style="font-size: 1.1rem; font-weight: bold; color: var(--neon-purple);">--</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-glass); padding: 0.4rem 1rem; border-radius: 8px; text-align: center; min-width: 100px;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Deviation</div>
+                <div id="sheet-live-cents" style="font-size: 1.1rem; font-weight: bold; color: #fff;">-- cents</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-glass); padding: 0.4rem 1rem; border-radius: 8px; text-align: center; min-width: 135px;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Voice Assessment</div>
+                <div id="sheet-voice-feedback" style="font-size: 1rem; font-weight: bold; color: var(--neon-green);">WAITING...</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-glass); padding: 0.4rem 1rem; border-radius: 8px; text-align: center; min-width: 155px;">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Ukulele Assessment</div>
+                <div id="sheet-chord-feedback" style="font-size: 1rem; font-weight: bold; color: var(--neon-purple);">WAITING...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sheet Music Canvas Board -->
+        <div class="glass-panel" style="padding: 1rem; overflow: hidden; position: relative;">
+          <canvas id="sheet-canvas" style="width: 100%; height: 320px; background: #06060c; border: 1px solid var(--border-glass); border-radius: 12px; display: block;"></canvas>
+          <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted); padding: 0 0.5rem;">
+            <span>💡 Sing the noteheads and strum the chord symbols as they align with the vertical playhead line.</span>
+            <span>Clef: Treble (G-clef)</span>
+          </div>
+        </div>
+
+        <!-- Sheet Performance Grade card (hidden by default) -->
+        <div class="glass-panel" id="sheet-report-card" style="display: none; padding: 2rem; flex-direction: column; gap: 1.5rem; max-width: 700px; margin: 1.5rem auto;">
+          <div style="text-align: center; position: relative;">
+            <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--neon-cyan);">Practice Session Report</h2>
+            <p style="color: var(--text-secondary); margin-top: 0.25rem;">Diagnostic assessment of your vocal & ukulele coordination:</p>
+            
+            <div class="score-badge-circle" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); border: 4px solid var(--border-glass); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-neon-cyan); margin: 1.5rem auto;">
+              <div id="sheet-grade-val" style="font-size: 3.2rem; font-weight: 800; color: #07070f; line-height: 1;">A</div>
+              <div style="font-size: 0.75rem; font-weight: bold; color: #07070f; text-transform: uppercase;">Total Grade</div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div class="glass-panel" style="padding: 1.25rem; text-align: center; background: rgba(0,0,0,0.2);">
+              <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Voice Melody Matching</div>
+              <div id="sheet-res-voice-acc" style="font-size: 2.2rem; font-weight: 800; color: var(--neon-green); margin: 0.5rem 0;">92%</div>
+              <p style="font-size: 0.8rem; color: var(--text-muted);" id="sheet-res-voice-cents">Avg Deviation: 14 cents</p>
+            </div>
+            <div class="glass-panel" style="padding: 1.25rem; text-align: center; background: rgba(0,0,0,0.2);">
+              <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Ukulele Chord Strumming</div>
+              <div id="sheet-res-chord-acc" style="font-size: 2.2rem; font-weight: 800; color: var(--neon-purple); margin: 0.5rem 0;">80%</div>
+              <p style="font-size: 0.8rem; color: var(--text-muted);" id="sheet-res-chord-count">8 of 10 chords matched</p>
+            </div>
+          </div>
+
+          <div class="feedback-diagnostic-box" style="margin: 0; padding: 1.25rem;">
+            <h3 style="font-size: 1.1rem; font-weight: bold;"><i class="fa-solid fa-stethoscope"></i> Vocal + Instrument Coach</h3>
+            <p id="sheet-res-feedback-text" style="color: var(--text-secondary); line-height: 1.5; margin-top: 0.5rem;"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. Vocal Character Sheet View -->
+    <section id="character-view" class="view-section">
+      <div class="section-title">
+        <div>
+          <h1 style="font-weight: 800;">Vocal Character Sheet</h1>
+          <p style="font-size: 1rem; color: var(--text-secondary); font-weight: 400; margin-top: 0.25rem;">Track your vocal milestones, achievements, and training levels.</p>
+        </div>
+      </div>
+
+      <div class="tuner-grid" style="grid-template-columns: 0.8fr 1.2fr;">
+        <!-- Left: Character Card & Stats -->
+        <div class="glass-panel text-center" style="display: flex; flex-direction: column; gap: 1.5rem; justify-content: center; align-items: center;">
+          <div style="position: relative;">
+            <div id="character-avatar" style="width: 130px; height: 130px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); border: 4px solid var(--border-glass); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: bold; color: #07070f; box-shadow: var(--shadow-neon-cyan); margin: 0 auto;">
+              S
+            </div>
+            <div id="character-level-badge" style="position: absolute; bottom: 0; right: 0; background: var(--accent-magenta); color: white; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; border: 2px solid #07070f;">
+              1
+            </div>
+          </div>
+          
+          <div>
+            <h2 id="character-name" style="font-size: 1.6rem; font-weight: bold; margin-bottom: 0.25rem;">Singer</h2>
+            <div id="character-title" style="font-size: 0.9rem; font-weight: bold; text-transform: uppercase; color: var(--neon-purple); letter-spacing: 1px;">Apprentice Hummingbird</div>
+            <div id="character-voice-type" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">Not Calibrated</div>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border-glass); width: 100%; margin: 0.5rem 0;">
+
+          <!-- Aggregate Stats -->
+          <div style="width: 100%; text-align: left; display: flex; flex-direction: column; gap: 0.8rem;">
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.2rem;">
+                <span>Total XP / Score</span>
+                <span id="character-xp" style="font-weight: bold; color: var(--text-primary);">0</span>
+              </div>
+              <div style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-glass);">
+                <div id="character-xp-bar" style="height: 100%; width: 0%; background: var(--primary-glow);"></div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.35rem; margin: 0.25rem 0;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary);">
+                <span>Intonation Accuracy:</span>
+                <strong id="char-stat-accuracy" style="color: var(--neon-green);">0%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary);">
+                <span>Breath Stability:</span>
+                <strong id="char-stat-stability" style="color: var(--neon-cyan);">0%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary);">
+                <span>Vocal Agility:</span>
+                <strong id="char-stat-agility" style="color: var(--neon-purple);">0%</strong>
+              </div>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid var(--border-glass); width: 100%; margin: 0.2rem 0;">
+
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary);">
+              <span>Levels Cleared:</span>
+              <strong id="char-levels-cleared" style="color: var(--text-primary);">0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary);">
+              <span>Karaoke Songs Sung:</span>
+              <strong id="char-songs-sung" style="color: var(--text-primary);">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Milestones & Achievements Grid -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <h2 style="font-size: 1.3rem; font-weight: 700;">Unlocked Accomplishments</h2>
+          <p style="color: var(--text-secondary); font-size: 0.9rem;">Achievements are unlocked as you practice and hit intonation, breathing, and performance benchmarks.</p>
+
+          <div id="achievements-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; max-height: 420px; overflow-y: auto; padding-right: 0.5rem; margin-top: 0.5rem;">
+            <!-- Achievements items rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. Vocal Diagnostic Profile & Keyboard Heatmap -->
+    <section id="profile-view" class="view-section">
+      <div class="section-title">
+        <div>
+          <h1 style="font-weight: 800;">Vocal Diagnostic Profile</h1>
+          <p style="font-size: 1rem; color: var(--text-secondary); font-weight: 400; margin-top: 0.25rem;">Explore note-by-note vocal accuracy, pro benchmark checklists, and musical genre recommendations.</p>
+        </div>
+      </div>
+
+      <div class="tuner-grid" style="grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <!-- Left: Vocal Range & Genre Matcher -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1.2rem;">
+          <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--neon-cyan); margin: 0;"><i class="fa-solid fa-gauge-high"></i> Range & Register Classification</h2>
+          
+          <div style="background: rgba(0,0,0,0.2); padding: 1.2rem; border-radius: 8px; border: 1px solid var(--border-glass);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+              <span>Vocal Register:</span>
+              <strong id="profile-voice-type" style="color: var(--neon-purple);">Calibrating...</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 1rem;">
+              <span>Comfortable Range:</span>
+              <strong id="profile-range-bounds" style="color: var(--text-primary);">-- Hz to -- Hz</strong>
+            </div>
+            <!-- Range span visual bar -->
+            <div style="position: relative; height: 18px; background: rgba(255,255,255,0.05); border-radius: 9px; border: 1px solid var(--border-glass); overflow: hidden; margin-top: 0.5rem;">
+              <div id="profile-range-bar" style="position: absolute; height: 100%; left: 20%; right: 20%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); border-radius: 9px; box-shadow: var(--shadow-neon-cyan);"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.4rem;">
+              <span>Low (E2)</span>
+              <span>Middle (C4)</span>
+              <span>High (C6)</span>
+            </div>
+          </div>
+
+          <div>
+            <h3 style="font-size: 1rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--text-primary);"><i class="fa-solid fa-guitar"></i> Recommended Musical Genres</h3>
+            <div id="profile-genre-recommendations" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.2rem;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Data Backup & Portability -->
+          <div style="border-top: 1px solid var(--border-glass); padding-top: 1rem; margin-top: 0.5rem;">
+            <h3 style="font-size: 1rem; font-weight: bold; margin-bottom: 0.5rem; color: var(--neon-cyan);"><i class="fa-solid fa-file-export"></i> Data Backup & Portability</h3>
+            <div style="display: flex; gap: 0.5rem; width: 100%;">
+              <button id="profile-export-btn" class="btn btn-secondary btn-sm" style="flex: 1; padding: 0.5rem 0.2rem;"><i class="fa-solid fa-download"></i> Export JSON</button>
+              <button id="profile-import-btn" class="btn btn-secondary btn-sm" style="flex: 1; padding: 0.5rem 0.2rem;"><i class="fa-solid fa-upload"></i> Import JSON</button>
+              <input type="file" id="profile-import-file" style="display: none;" accept=".json">
+            </div>
+            <div id="backup-status" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.4rem; display: none; text-align: center;"></div>
+          </div>
+        </div>
+
+        <!-- Right: Pro Status Checklist -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1.2rem;">
+          <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--neon-purple); margin: 0;"><i class="fa-solid fa-award"></i> Pro Status Evaluation</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Compare your average performance stats against elite professional standards to discover what to work on next.</p>
+          
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <!-- Benchmark item 1 -->
+            <div style="display: flex; align-items: center; gap: 0.8rem; background: rgba(0,0,0,0.15); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-glass);">
+              <div id="chk-pro-accuracy" class="profile-check-icon" style="font-size: 1.2rem; color: var(--text-secondary);"><i class="fa-regular fa-circle-check"></i></div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold;">
+                  <span>Intonation Accuracy</span>
+                  <span id="stat-pro-accuracy">-- cents</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Target: Average deviation &lt; 15 cents (Untrained is typically &gt; 40 cents)</div>
+              </div>
+            </div>
+            <!-- Benchmark item 2 -->
+            <div style="display: flex; align-items: center; gap: 0.8rem; background: rgba(0,0,0,0.15); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-glass);">
+              <div id="chk-pro-stability" class="profile-check-icon" style="font-size: 1.2rem; color: var(--text-secondary);"><i class="fa-regular fa-circle-check"></i></div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold;">
+                  <span>Pitch Stability (Jitter)</span>
+                  <span id="stat-pro-stability">-- Hz</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Target: Micro-jitter &lt; 2.0 Hz during sustained notes</div>
+              </div>
+            </div>
+            <!-- Benchmark item 3 -->
+            <div style="display: flex; align-items: center; gap: 0.8rem; background: rgba(0,0,0,0.15); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-glass);">
+              <div id="chk-pro-agility" class="profile-check-icon" style="font-size: 1.2rem; color: var(--text-secondary);"><i class="fa-regular fa-circle-check"></i></div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold;">
+                  <span>Vocal Agility</span>
+                  <span id="stat-pro-agility">-- ms</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Target: Note transition speed &lt; 80ms</div>
+              </div>
+            </div>
+            <!-- Benchmark item 4 -->
+            <div style="display: flex; align-items: center; gap: 0.8rem; background: rgba(0,0,0,0.15); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-glass);">
+              <div id="chk-pro-span" class="profile-check-icon" style="font-size: 1.2rem; color: var(--text-secondary);"><i class="fa-regular fa-circle-check"></i></div>
+              <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: bold;">
+                  <span>Vocal Span / Width</span>
+                  <span id="stat-pro-span">-- semitones</span>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Target: Reach range span &gt;= 24 semitones (2 full octaves)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full-Width Keyboard Heatmap Container -->
+      <div class="glass-panel" style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--neon-cyan); margin: 0;"><i class="fa-solid fa-keyboard"></i> Piano Keyboard Pitch Heatmap</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.15rem;">Scroll horizontally to explore note-by-note vocal strength. Hover/tap a key to inspect diagnostic telemetry.</p>
+          </div>
+          <!-- Heatmap legend -->
+          <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; font-size: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.3rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#00ff87;"></span> Perfect (&gt;=85%)</div>
+            <div style="display: flex; align-items: center; gap: 0.3rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#00f2fe;"></span> Good (65%-84%)</div>
+            <div style="display: flex; align-items: center; gap: 0.3rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#ff9f43;"></span> Shaky (35%-64%)</div>
+            <div style="display: flex; align-items: center; gap: 0.3rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#ff4d4d;"></span> Strain (&lt;35%)</div>
+            <div style="display: flex; align-items: center; gap: 0.3rem;"><span style="display:inline-block; width:12px; height:12px; border-radius:3px; background:#32323e;"></span> Untested</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 1.5rem; align-items: start;">
+          <!-- Left: Scrolling Keyboard -->
+          <div style="background: rgba(0,0,0,0.3); padding: 1.5rem 1rem; border-radius: 12px; border: 1px solid var(--border-glass); overflow-x: auto; overflow-y: hidden;">
+            <div id="profile-keyboard" class="piano-keyboard-scroll" style="display: flex; position: relative; height: 160px; min-width: max-content; padding-bottom: 5px;">
+              <!-- Keys generated dynamically -->
+            </div>
+          </div>
+
+          <!-- Right: Note Diagnostic HUD -->
+          <div class="glass-panel" style="background: rgba(255,255,255,0.02); height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem; padding: 1.25rem;">
+            <div id="hud-empty-state" style="text-align: center; color: var(--text-secondary); padding: 1.5rem 0;">
+              <i class="fa-solid fa-arrow-pointer" style="font-size: 2rem; margin-bottom: 0.6rem; color: var(--neon-cyan);"></i>
+              <p style="font-size: 0.85rem;">Hover or click a piano key to view diagnostic details for that note.</p>
+            </div>
+            
+            <div id="hud-note-details" style="display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+                <h3 id="hud-note-name" style="font-size: 1.8rem; font-weight: 800; color: var(--neon-cyan); margin: 0;">C4</h3>
+                <span id="hud-note-freq" style="font-size: 0.85rem; color: var(--text-secondary);">261.6 Hz</span>
+              </div>
+              <hr style="border: none; border-top: 1px solid var(--border-glass); margin: 0.5rem 0;">
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; margin-top: 0.5rem;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Average Accuracy:</span>
+                  <strong id="hud-note-accuracy" style="color: var(--neon-green);">--%</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Peak Sustain Duration:</span>
+                  <strong id="hud-note-sustain">--s</strong>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.2rem; margin-top: 0.4rem;">
+                  <span>Vocal Zone Diagnosis:</span>
+                  <p id="hud-note-diagnosis" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.35; margin: 0;"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tuner-grid" style="grid-template-columns: 1.2fr 0.8fr; gap: 1.5rem;">
+        <!-- Left: Vocal Progress History Chart -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1rem;">
+          <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--neon-cyan); margin: 0;"><i class="fa-solid fa-chart-line"></i> Historical Progress Timeline</h2>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Observe your intonation accuracy, breath stability, and vocal agility trends over your last 10 challenges.</p>
+          <div style="position: relative; width: 100%; height: 220px; background: rgba(0,0,0,0.25); border-radius: 8px; border: 1px solid var(--border-glass); padding: 0.5rem;">
+            <canvas id="profile-timeline-chart" style="width: 100%; height: 100%;"></canvas>
+          </div>
+        </div>
+
+        <!-- Right: Diagnostic Coaching Panel -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; gap: 1rem; justify-content: space-between;">
+          <div>
+            <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--neon-purple); margin: 0;"><i class="fa-solid fa-heart-pulse"></i> Vocal Coach Diagnostic Report</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.15rem; margin-bottom: 1rem;">Aggregated advice based on all your recorded singing metrics.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+              <div style="background: rgba(185, 39, 252, 0.05); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(185, 39, 252, 0.2);">
+                <h4 style="font-size: 0.85rem; font-weight: bold; margin: 0 0 0.25rem 0; color: var(--neon-purple);"><i class="fa-solid fa-circle-arrow-up"></i> Strength Center</h4>
+                <p id="profile-coaching-strengths" style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.35;">Sustain a few note matching levels to populate your profile strengths.</p>
+              </div>
+              <div style="background: rgba(255, 159, 67, 0.05); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255, 159, 67, 0.2);">
+                <h4 style="font-size: 0.85rem; font-weight: bold; margin: 0 0 0.25rem 0; color: var(--neon-orange);"><i class="fa-solid fa-circle-arrow-down"></i> Improvement Areas</h4>
+                <p id="profile-coaching-weaknesses" style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.35;">Complete more curriculum tasks to reveal strain notes and jitter hotspots.</p>
+              </div>
+            </div>
+          </div>
+          
+          <button id="profile-start-warmup-btn" class="btn btn-primary" style="width: 100%; margin-top: 0.8rem;"><i class="fa-solid fa-wand-magic-sparkles"></i> Launch Warmup Exercises</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Live Diagnostic status floating indicator -->
+  <div class="diag-status-floating">
+    <div class="indicator-dot"></div>
+    <span>Diag Channel Connected</span>
+  </div>
+
+  <!-- Loading scripts -->
+  <script src="js/db-helper.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/midi-parser.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/sheet.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

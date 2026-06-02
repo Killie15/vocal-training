@@ -1,0 +1,10 @@
+node_modules/
+vocal_trainer.db
+vocal_trainer.db-journal
+.DS_Store
+scripts/
+annotated*.png
+current_screen*.png
+warmups_test*.png
+*_screen.png
+_

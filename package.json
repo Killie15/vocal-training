@@ -1,0 +1,20 @@
+{
+  "name": "vocal-trainer",
+  "version": "1.0.0",
+  "description": "Gamified vocal trainer and tuner with SQLite database and live diagnostics",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "pg": "^8.21.0",
+    "serverless-http": "^4.0.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.1.0"
+  }
+}

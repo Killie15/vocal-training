@@ -1,0 +1,1469 @@
+[
+  {
+    "id": 1,
+    "milestone": 1,
+    "name": "Perfect Match",
+    "type": "hold",
+    "targetMidi": 60,
+    "durationMs": 5000,
+    "targetNote": "C4",
+    "skill": "Pitch Matching",
+    "difficulty": "Beginner",
+    "description": "Match and hold a single steady pitch. Tests baseline intonation. (Game waits for you to hit the note to scroll!)."
+  },
+  {
+    "id": 2,
+    "milestoneLevel": 2,
+    "name": "Perfect Match - Part 1",
+    "description": "Progressive challenge scaling up parameters towards Milestone 10 (Iron Lung).",
+    "type": "hold",
+    "targetMidi": 60,
+    "targetNote": "C4",
+    "durationMs": 5556,
+    "skill": "Pitch Matching",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": 3,
+    "milestoneLevel": 3,
+    "name": "Perfect Match - Part 2",
+    "description": "Progressive challenge scaling up parameters towards Milestone 10 (Iron Lung).",
+    "type": "hold",
+    "targetMidi": 60,
+    "targetNote": "C4",
+    "durationMs": 6111,
+    "skill": "Pitch Matching",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": 4,
+    "milestoneLevel": 4,
+    "name": "Perfect Match - Part 3",
+    "description": "Progressive challenge scaling up parameters towards Milestone 10 (Iron Lung).",
+    "type": "hold",
+    "targetMidi": 61,
+    "targetNote": "C#4",
+    "durationMs": 6667,
+    "skill": "Pitch Matching",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": 5,
+    "milestoneLevel": 5,
+    "name": "Perfect Match - Part 4",
+    "description": "Progressive challenge scaling up parameters towards Milestone 10 (Iron Lung).",
+    "type": "hold",
+    "targetMidi": 61,
+    "targetNote": "C#4",
+    "durationMs": 7222,
+    "skill": "Pitch Matching",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": 6,
+    "milestoneLevel": 6,
+    "name": "Perfect Match - Part 5",
+    "description": "Progressive challenge scaling up parameters towards Milestone 10 (Iron Lung).",
+    "type": "hold",
+    "targetMidi": 61,
+    "targetNote": "C#4",
+    "durationMs": 7778,
+    "skill": "Pitch Matching",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": 7,
+    "milestoneLevel": 7,
+    "name": "Perfect Match - Part 6",
+    "description": "Progressive challenge scaling up parameters towards Milestone 10 (Iron Lung).",
+    "type": "hold",
+    "targetMidi": 61,
+    "targetNote": "C#4",
+    "durationMs": 8333,
+    "skill": "Pitch Matching",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": 8,
+    "milestoneLevel": 8,
+    "name": "Perfect Match - Part 7",
+    "description": "Progressive challenge scaling up parameters towards Milestone 10 (Iron Lung).",
+    "type": "hold",
+    "targetMidi": 62,
+    "targetNote": "D4",
+    "durationMs": 8889,
+    "skill": "Pitch Matching",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": 9,
+    "milestoneLevel": 9,
+    "name": "Perfect Match - Part 8",
+    "description": "Progressive challenge scaling up parameters towards Milestone 10 (Iron Lung).",
+    "type": "hold",
+    "targetMidi": 62,
+    "targetNote": "D4",
+    "durationMs": 9444,
+    "skill": "Pitch Matching",
+    "difficulty": "Beginner"
+  },
+  {
+    "id": 10,
+    "milestone": 10,
+    "name": "Iron Lung",
+    "type": "hold",
+    "targetMidi": 62,
+    "durationMs": 10000,
+    "targetNote": "D4",
+    "skill": "Breath Stability",
+    "difficulty": "Beginner",
+    "description": "Sustain a straight tone for double the length. Tests breath stamina."
+  },
+  {
+    "id": 11,
+    "milestoneLevel": 11,
+    "name": "Iron Lung - Part 1",
+    "description": "Progressive challenge scaling up parameters towards Milestone 20 (Smooth Glide).",
+    "type": "hold",
+    "targetMidi": null,
+    "targetNote": null,
+    "durationMs": 9600,
+    "skill": "Breath Stability",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 12,
+    "milestoneLevel": 12,
+    "name": "Iron Lung - Part 2",
+    "description": "Progressive challenge scaling up parameters towards Milestone 20 (Smooth Glide).",
+    "type": "hold",
+    "targetMidi": null,
+    "targetNote": null,
+    "durationMs": 9200,
+    "skill": "Breath Stability",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 13,
+    "milestoneLevel": 13,
+    "name": "Iron Lung - Part 3",
+    "description": "Progressive challenge scaling up parameters towards Milestone 20 (Smooth Glide).",
+    "type": "hold",
+    "targetMidi": null,
+    "targetNote": null,
+    "durationMs": 8800,
+    "skill": "Breath Stability",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 14,
+    "milestoneLevel": 14,
+    "name": "Iron Lung - Part 4",
+    "description": "Progressive challenge scaling up parameters towards Milestone 20 (Smooth Glide).",
+    "type": "hold",
+    "targetMidi": null,
+    "targetNote": null,
+    "durationMs": 8400,
+    "skill": "Breath Stability",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 15,
+    "milestoneLevel": 15,
+    "name": "Iron Lung - Part 5",
+    "description": "Progressive challenge scaling up parameters towards Milestone 20 (Smooth Glide).",
+    "type": "hold",
+    "targetMidi": null,
+    "targetNote": null,
+    "durationMs": 8000,
+    "skill": "Breath Stability",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 16,
+    "milestoneLevel": 16,
+    "name": "Iron Lung - Part 6",
+    "description": "Progressive challenge scaling up parameters towards Milestone 20 (Smooth Glide).",
+    "type": "hold",
+    "targetMidi": null,
+    "targetNote": null,
+    "durationMs": 7600,
+    "skill": "Breath Stability",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 17,
+    "milestoneLevel": 17,
+    "name": "Iron Lung - Part 7",
+    "description": "Progressive challenge scaling up parameters towards Milestone 20 (Smooth Glide).",
+    "type": "hold",
+    "targetMidi": null,
+    "targetNote": null,
+    "durationMs": 7200,
+    "skill": "Breath Stability",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 18,
+    "milestoneLevel": 18,
+    "name": "Iron Lung - Part 8",
+    "description": "Progressive challenge scaling up parameters towards Milestone 20 (Smooth Glide).",
+    "type": "hold",
+    "targetMidi": null,
+    "targetNote": null,
+    "durationMs": 6800,
+    "skill": "Breath Stability",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 19,
+    "milestoneLevel": 19,
+    "name": "Iron Lung - Part 9",
+    "description": "Progressive challenge scaling up parameters towards Milestone 20 (Smooth Glide).",
+    "type": "hold",
+    "targetMidi": null,
+    "targetNote": null,
+    "durationMs": 6400,
+    "skill": "Breath Stability",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 20,
+    "milestone": 20,
+    "name": "Smooth Glide",
+    "type": "glide",
+    "startMidi": 57,
+    "endMidi": 64,
+    "durationMs": 6000,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy",
+    "description": "Slide your voice smoothly upward from a lower pitch to a higher pitch."
+  },
+  {
+    "id": 21,
+    "milestoneLevel": 21,
+    "name": "Smooth Glide - Part 1",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 6133,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 22,
+    "milestoneLevel": 22,
+    "name": "Smooth Glide - Part 2",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 6267,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 23,
+    "milestoneLevel": 23,
+    "name": "Smooth Glide - Part 3",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 6400,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 24,
+    "milestoneLevel": 24,
+    "name": "Smooth Glide - Part 4",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 6533,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 25,
+    "milestoneLevel": 25,
+    "name": "Smooth Glide - Part 5",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 6667,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 26,
+    "milestoneLevel": 26,
+    "name": "Smooth Glide - Part 6",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 6800,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 27,
+    "milestoneLevel": 27,
+    "name": "Smooth Glide - Part 7",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 6933,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 28,
+    "milestoneLevel": 28,
+    "name": "Smooth Glide - Part 8",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 7067,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 29,
+    "milestoneLevel": 29,
+    "name": "Smooth Glide - Part 9",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 7200,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 30,
+    "milestoneLevel": 30,
+    "name": "Smooth Glide - Part 10",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 7333,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 31,
+    "milestoneLevel": 31,
+    "name": "Smooth Glide - Part 11",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 7467,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 32,
+    "milestoneLevel": 32,
+    "name": "Smooth Glide - Part 12",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 7600,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 33,
+    "milestoneLevel": 33,
+    "name": "Smooth Glide - Part 13",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 7733,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 34,
+    "milestoneLevel": 34,
+    "name": "Smooth Glide - Part 14",
+    "description": "Progressive challenge scaling up parameters towards Milestone 35 (The Third Step).",
+    "type": "glide",
+    "startMidi": null,
+    "endMidi": null,
+    "durationMs": 7867,
+    "skill": "Pitch Glides",
+    "difficulty": "Easy"
+  },
+  {
+    "id": 35,
+    "milestone": 35,
+    "name": "The Third Step",
+    "type": "interval",
+    "notes": [
+      60,
+      64,
+      60,
+      64,
+      60
+    ],
+    "durationMs": 8000,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium",
+    "description": "Quickly alternate between two notes a major third apart."
+  },
+  {
+    "id": 36,
+    "milestoneLevel": 36,
+    "name": "The Third Step - Part 1",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      60,
+      64,
+      60,
+      64,
+      60
+    ],
+    "durationMs": 8133,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 37,
+    "milestoneLevel": 37,
+    "name": "The Third Step - Part 2",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      61,
+      65,
+      61,
+      65,
+      61
+    ],
+    "durationMs": 8267,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 38,
+    "milestoneLevel": 38,
+    "name": "The Third Step - Part 3",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      61,
+      65,
+      61,
+      65,
+      61
+    ],
+    "durationMs": 8400,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 39,
+    "milestoneLevel": 39,
+    "name": "The Third Step - Part 4",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      61,
+      65,
+      61,
+      65,
+      61
+    ],
+    "durationMs": 8533,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 40,
+    "milestoneLevel": 40,
+    "name": "The Third Step - Part 5",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      61,
+      65,
+      61,
+      65,
+      61
+    ],
+    "durationMs": 8667,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 41,
+    "milestoneLevel": 41,
+    "name": "The Third Step - Part 6",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      62,
+      66,
+      62,
+      66,
+      62
+    ],
+    "durationMs": 8800,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 42,
+    "milestoneLevel": 42,
+    "name": "The Third Step - Part 7",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      62,
+      66,
+      62,
+      66,
+      62
+    ],
+    "durationMs": 8933,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 43,
+    "milestoneLevel": 43,
+    "name": "The Third Step - Part 8",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      62,
+      66,
+      62,
+      66,
+      62
+    ],
+    "durationMs": 9067,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 44,
+    "milestoneLevel": 44,
+    "name": "The Third Step - Part 9",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      62,
+      66,
+      62,
+      66,
+      62
+    ],
+    "durationMs": 9200,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 45,
+    "milestoneLevel": 45,
+    "name": "The Third Step - Part 10",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      63,
+      67,
+      63,
+      67,
+      63
+    ],
+    "durationMs": 9333,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 46,
+    "milestoneLevel": 46,
+    "name": "The Third Step - Part 11",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      63,
+      67,
+      63,
+      67,
+      63
+    ],
+    "durationMs": 9467,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 47,
+    "milestoneLevel": 47,
+    "name": "The Third Step - Part 12",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      63,
+      67,
+      63,
+      67,
+      63
+    ],
+    "durationMs": 9600,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 48,
+    "milestoneLevel": 48,
+    "name": "The Third Step - Part 13",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      63,
+      67,
+      63,
+      67,
+      63
+    ],
+    "durationMs": 9733,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 49,
+    "milestoneLevel": 49,
+    "name": "The Third Step - Part 14",
+    "description": "Progressive challenge scaling up parameters towards Milestone 50 (Pentatonic Runner).",
+    "type": "interval",
+    "notes": [
+      64,
+      68,
+      64,
+      68,
+      64
+    ],
+    "durationMs": 9867,
+    "skill": "Interval Jumping",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 50,
+    "milestone": 50,
+    "name": "Pentatonic Runner",
+    "type": "run",
+    "notes": [
+      60,
+      62,
+      64,
+      67,
+      69,
+      67,
+      64,
+      62,
+      60
+    ],
+    "durationMs": 10000,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium",
+    "description": "Sing a five-note major pentatonic scale run ascending and descending."
+  },
+  {
+    "id": 51,
+    "milestoneLevel": 51,
+    "name": "Pentatonic Runner - Part 1",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      60,
+      62,
+      64,
+      67,
+      69,
+      67,
+      64,
+      62,
+      60
+    ],
+    "durationMs": 10333,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 52,
+    "milestoneLevel": 52,
+    "name": "Pentatonic Runner - Part 2",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      61,
+      63,
+      65,
+      68,
+      70,
+      68,
+      65,
+      63,
+      61
+    ],
+    "durationMs": 10667,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 53,
+    "milestoneLevel": 53,
+    "name": "Pentatonic Runner - Part 3",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      61,
+      63,
+      65,
+      68,
+      70,
+      68,
+      65,
+      63,
+      61
+    ],
+    "durationMs": 11000,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 54,
+    "milestoneLevel": 54,
+    "name": "Pentatonic Runner - Part 4",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      61,
+      63,
+      65,
+      68,
+      70,
+      68,
+      65,
+      63,
+      61
+    ],
+    "durationMs": 11333,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 55,
+    "milestoneLevel": 55,
+    "name": "Pentatonic Runner - Part 5",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      61,
+      63,
+      65,
+      68,
+      70,
+      68,
+      65,
+      63,
+      61
+    ],
+    "durationMs": 11667,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 56,
+    "milestoneLevel": 56,
+    "name": "Pentatonic Runner - Part 6",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      62,
+      64,
+      66,
+      69,
+      71,
+      69,
+      66,
+      64,
+      62
+    ],
+    "durationMs": 12000,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 57,
+    "milestoneLevel": 57,
+    "name": "Pentatonic Runner - Part 7",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      62,
+      64,
+      66,
+      69,
+      71,
+      69,
+      66,
+      64,
+      62
+    ],
+    "durationMs": 12333,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 58,
+    "milestoneLevel": 58,
+    "name": "Pentatonic Runner - Part 8",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      62,
+      64,
+      66,
+      69,
+      71,
+      69,
+      66,
+      64,
+      62
+    ],
+    "durationMs": 12667,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 59,
+    "milestoneLevel": 59,
+    "name": "Pentatonic Runner - Part 9",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      62,
+      64,
+      66,
+      69,
+      71,
+      69,
+      66,
+      64,
+      62
+    ],
+    "durationMs": 13000,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 60,
+    "milestoneLevel": 60,
+    "name": "Pentatonic Runner - Part 10",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      63,
+      65,
+      67,
+      70,
+      72,
+      70,
+      67,
+      65,
+      63
+    ],
+    "durationMs": 13333,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 61,
+    "milestoneLevel": 61,
+    "name": "Pentatonic Runner - Part 11",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      63,
+      65,
+      67,
+      70,
+      72,
+      70,
+      67,
+      65,
+      63
+    ],
+    "durationMs": 13667,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 62,
+    "milestoneLevel": 62,
+    "name": "Pentatonic Runner - Part 12",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      63,
+      65,
+      67,
+      70,
+      72,
+      70,
+      67,
+      65,
+      63
+    ],
+    "durationMs": 14000,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 63,
+    "milestoneLevel": 63,
+    "name": "Pentatonic Runner - Part 13",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      63,
+      65,
+      67,
+      70,
+      72,
+      70,
+      67,
+      65,
+      63
+    ],
+    "durationMs": 14333,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 64,
+    "milestoneLevel": 64,
+    "name": "Pentatonic Runner - Part 14",
+    "description": "Progressive challenge scaling up parameters towards Milestone 65 (The Marathon).",
+    "type": "run",
+    "notes": [
+      64,
+      66,
+      68,
+      71,
+      73,
+      71,
+      68,
+      66,
+      64
+    ],
+    "durationMs": 14667,
+    "skill": "Vocal Agility",
+    "difficulty": "Medium"
+  },
+  {
+    "id": 65,
+    "milestone": 65,
+    "name": "The Marathon",
+    "type": "hold",
+    "targetMidi": 64,
+    "durationMs": 15000,
+    "targetNote": "E4",
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard",
+    "description": "Sustain a steady target pitch for an extended 15 seconds."
+  },
+  {
+    "id": 66,
+    "milestoneLevel": 66,
+    "name": "The Marathon - Part 1",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 64,
+    "targetNote": "E4",
+    "durationMs": 14533,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 67,
+    "milestoneLevel": 67,
+    "name": "The Marathon - Part 2",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 64,
+    "targetNote": "E4",
+    "durationMs": 14067,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 68,
+    "milestoneLevel": 68,
+    "name": "The Marathon - Part 3",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 65,
+    "targetNote": "F4",
+    "durationMs": 13600,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 69,
+    "milestoneLevel": 69,
+    "name": "The Marathon - Part 4",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 65,
+    "targetNote": "F4",
+    "durationMs": 13133,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 70,
+    "milestoneLevel": 70,
+    "name": "The Marathon - Part 5",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 65,
+    "targetNote": "F4",
+    "durationMs": 12667,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 71,
+    "milestoneLevel": 71,
+    "name": "The Marathon - Part 6",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 65,
+    "targetNote": "F4",
+    "durationMs": 12200,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 72,
+    "milestoneLevel": 72,
+    "name": "The Marathon - Part 7",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 65,
+    "targetNote": "F4",
+    "durationMs": 11733,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 73,
+    "milestoneLevel": 73,
+    "name": "The Marathon - Part 8",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 66,
+    "targetNote": "F#4",
+    "durationMs": 11267,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 74,
+    "milestoneLevel": 74,
+    "name": "The Marathon - Part 9",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 66,
+    "targetNote": "F#4",
+    "durationMs": 10800,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 75,
+    "milestoneLevel": 75,
+    "name": "The Marathon - Part 10",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 66,
+    "targetNote": "F#4",
+    "durationMs": 10333,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 76,
+    "milestoneLevel": 76,
+    "name": "The Marathon - Part 11",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 66,
+    "targetNote": "F#4",
+    "durationMs": 9867,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 77,
+    "milestoneLevel": 77,
+    "name": "The Marathon - Part 12",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 66,
+    "targetNote": "F#4",
+    "durationMs": 9400,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 78,
+    "milestoneLevel": 78,
+    "name": "The Marathon - Part 13",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 67,
+    "targetNote": "G4",
+    "durationMs": 8933,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 79,
+    "milestoneLevel": 79,
+    "name": "The Marathon - Part 14",
+    "description": "Progressive challenge scaling up parameters towards Milestone 80 (Vibrato Waves).",
+    "type": "hold",
+    "targetMidi": 67,
+    "targetNote": "G4",
+    "durationMs": 8467,
+    "skill": "Vocal Endurance",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 80,
+    "milestone": 80,
+    "name": "Vibrato Waves",
+    "type": "vibrato",
+    "targetMidi": 67,
+    "durationMs": 8000,
+    "targetNote": "G4",
+    "skill": "Vibrato Control",
+    "difficulty": "Hard",
+    "description": "Sing and hold a note while adding a controlled periodic oscillation."
+  },
+  {
+    "id": 81,
+    "milestoneLevel": 81,
+    "name": "Vibrato Waves - Part 1",
+    "description": "Progressive challenge scaling up parameters towards Milestone 90 (Octave Leap).",
+    "type": "vibrato",
+    "notes": [
+      67
+    ],
+    "targetMidi": 67,
+    "targetNote": "G4",
+    "durationMs": 7800,
+    "skill": "Vibrato Control",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 82,
+    "milestoneLevel": 82,
+    "name": "Vibrato Waves - Part 2",
+    "description": "Progressive challenge scaling up parameters towards Milestone 90 (Octave Leap).",
+    "type": "vibrato",
+    "notes": [
+      68
+    ],
+    "targetMidi": 68,
+    "targetNote": "G4",
+    "durationMs": 7600,
+    "skill": "Vibrato Control",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 83,
+    "milestoneLevel": 83,
+    "name": "Vibrato Waves - Part 3",
+    "description": "Progressive challenge scaling up parameters towards Milestone 90 (Octave Leap).",
+    "type": "vibrato",
+    "notes": [
+      68
+    ],
+    "targetMidi": 68,
+    "targetNote": "G4",
+    "durationMs": 7400,
+    "skill": "Vibrato Control",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 84,
+    "milestoneLevel": 84,
+    "name": "Vibrato Waves - Part 4",
+    "description": "Progressive challenge scaling up parameters towards Milestone 90 (Octave Leap).",
+    "type": "vibrato",
+    "notes": [
+      69
+    ],
+    "targetMidi": 69,
+    "targetNote": "G4",
+    "durationMs": 7200,
+    "skill": "Vibrato Control",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 85,
+    "milestoneLevel": 85,
+    "name": "Vibrato Waves - Part 5",
+    "description": "Progressive challenge scaling up parameters towards Milestone 90 (Octave Leap).",
+    "type": "vibrato",
+    "notes": [
+      69
+    ],
+    "targetMidi": 69,
+    "targetNote": "G4",
+    "durationMs": 7000,
+    "skill": "Vibrato Control",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 86,
+    "milestoneLevel": 86,
+    "name": "Vibrato Waves - Part 6",
+    "description": "Progressive challenge scaling up parameters towards Milestone 90 (Octave Leap).",
+    "type": "vibrato",
+    "notes": [
+      69
+    ],
+    "targetMidi": 69,
+    "targetNote": "G4",
+    "durationMs": 6800,
+    "skill": "Vibrato Control",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 87,
+    "milestoneLevel": 87,
+    "name": "Vibrato Waves - Part 7",
+    "description": "Progressive challenge scaling up parameters towards Milestone 90 (Octave Leap).",
+    "type": "vibrato",
+    "notes": [
+      70
+    ],
+    "targetMidi": 70,
+    "targetNote": "G4",
+    "durationMs": 6600,
+    "skill": "Vibrato Control",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 88,
+    "milestoneLevel": 88,
+    "name": "Vibrato Waves - Part 8",
+    "description": "Progressive challenge scaling up parameters towards Milestone 90 (Octave Leap).",
+    "type": "vibrato",
+    "notes": [
+      70
+    ],
+    "targetMidi": 70,
+    "targetNote": "G4",
+    "durationMs": 6400,
+    "skill": "Vibrato Control",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 89,
+    "milestoneLevel": 89,
+    "name": "Vibrato Waves - Part 9",
+    "description": "Progressive challenge scaling up parameters towards Milestone 90 (Octave Leap).",
+    "type": "vibrato",
+    "notes": [
+      71
+    ],
+    "targetMidi": 71,
+    "targetNote": "G4",
+    "durationMs": 6200,
+    "skill": "Vibrato Control",
+    "difficulty": "Hard"
+  },
+  {
+    "id": 90,
+    "milestone": 90,
+    "name": "Octave Leap",
+    "type": "interval",
+    "notes": [
+      57,
+      69
+    ],
+    "durationMs": 6000,
+    "skill": "Interval Precision",
+    "difficulty": "Hard",
+    "description": "Sing a note, then instantly leap up exactly one octave."
+  },
+  {
+    "id": 91,
+    "milestoneLevel": 91,
+    "name": "Octave Leap - Part 1",
+    "description": "Progressive challenge scaling up parameters towards Milestone 100 (Vocal Rollercoaster).",
+    "type": "interval",
+    "notes": [
+      57,
+      69
+    ],
+    "durationMs": 6900,
+    "skill": "Interval Precision",
+    "difficulty": "Professional"
+  },
+  {
+    "id": 92,
+    "milestoneLevel": 92,
+    "name": "Octave Leap - Part 2",
+    "description": "Progressive challenge scaling up parameters towards Milestone 100 (Vocal Rollercoaster).",
+    "type": "interval",
+    "notes": [
+      58,
+      70
+    ],
+    "durationMs": 7800,
+    "skill": "Interval Precision",
+    "difficulty": "Professional"
+  },
+  {
+    "id": 93,
+    "milestoneLevel": 93,
+    "name": "Octave Leap - Part 3",
+    "description": "Progressive challenge scaling up parameters towards Milestone 100 (Vocal Rollercoaster).",
+    "type": "interval",
+    "notes": [
+      58,
+      70
+    ],
+    "durationMs": 8700,
+    "skill": "Interval Precision",
+    "difficulty": "Professional"
+  },
+  {
+    "id": 94,
+    "milestoneLevel": 94,
+    "name": "Octave Leap - Part 4",
+    "description": "Progressive challenge scaling up parameters towards Milestone 100 (Vocal Rollercoaster).",
+    "type": "interval",
+    "notes": [
+      59,
+      71
+    ],
+    "durationMs": 9600,
+    "skill": "Interval Precision",
+    "difficulty": "Professional"
+  },
+  {
+    "id": 95,
+    "milestoneLevel": 95,
+    "name": "Octave Leap - Part 5",
+    "description": "Progressive challenge scaling up parameters towards Milestone 100 (Vocal Rollercoaster).",
+    "type": "interval",
+    "notes": [
+      59,
+      71
+    ],
+    "durationMs": 10500,
+    "skill": "Interval Precision",
+    "difficulty": "Professional"
+  },
+  {
+    "id": 96,
+    "milestoneLevel": 96,
+    "name": "Octave Leap - Part 6",
+    "description": "Progressive challenge scaling up parameters towards Milestone 100 (Vocal Rollercoaster).",
+    "type": "interval",
+    "notes": [
+      59,
+      71
+    ],
+    "durationMs": 11400,
+    "skill": "Interval Precision",
+    "difficulty": "Professional"
+  },
+  {
+    "id": 97,
+    "milestoneLevel": 97,
+    "name": "Octave Leap - Part 7",
+    "description": "Progressive challenge scaling up parameters towards Milestone 100 (Vocal Rollercoaster).",
+    "type": "interval",
+    "notes": [
+      60,
+      72
+    ],
+    "durationMs": 12300,
+    "skill": "Interval Precision",
+    "difficulty": "Professional"
+  },
+  {
+    "id": 98,
+    "milestoneLevel": 98,
+    "name": "Octave Leap - Part 8",
+    "description": "Progressive challenge scaling up parameters towards Milestone 100 (Vocal Rollercoaster).",
+    "type": "interval",
+    "notes": [
+      60,
+      72
+    ],
+    "durationMs": 13200,
+    "skill": "Interval Precision",
+    "difficulty": "Professional"
+  },
+  {
+    "id": 99,
+    "milestoneLevel": 99,
+    "name": "Octave Leap - Part 9",
+    "description": "Progressive challenge scaling up parameters towards Milestone 100 (Vocal Rollercoaster).",
+    "type": "interval",
+    "notes": [
+      61,
+      73
+    ],
+    "durationMs": 14100,
+    "skill": "Interval Precision",
+    "difficulty": "Professional"
+  },
+  {
+    "id": 100,
+    "milestone": 100,
+    "name": "Vocal Rollercoaster",
+    "type": "mastery",
+    "notes": [
+      60,
+      62,
+      64,
+      67,
+      69,
+      72,
+      72,
+      72,
+      67,
+      60
+    ],
+    "durationMs": 15000,
+    "skill": "Vocal Mastery",
+    "difficulty": "Professional",
+    "description": "A combination of slides, scales, and sustained notes with vibrato."
+  }
+]
