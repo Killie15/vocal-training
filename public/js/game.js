@@ -9,7 +9,7 @@ class PitchFlightGame {
     this.isActive = false;
     this.isPaused = false;
     this.gameTime = 0; // current time in seconds
-    this.scrollSpeed = 120; // pixels per second
+    this.scrollSpeed = 96; // pixels per second
     
     // User Calibration bounds (MIDI notes)
     this.minMidi = 48; // default C3
@@ -23,6 +23,8 @@ class PitchFlightGame {
     this.avatarTargetY = 240;
     this.avatarGlowColor = '#00f2fe';
     this.timeSinceLastPitch = 0.0; // tracks silent frames for responsive flying grace periods
+    this.damageGraceTime = 0;
+    this.flapVelocityY = 0;
     
     // Core game components
     this.notes = []; // level target notes [{ midi, time, duration, name }]
@@ -99,15 +101,18 @@ class PitchFlightGame {
     this.totalActiveFrames = 0;
     this.correctActiveFrames = 0;
     this.starsEarned = 0;
+    this.flapVelocityY = 0;
     
     // Warmup & Lives state
     this.isFreePlay = isFreePlay;
     this.warmupTimeLeft = isFreePlay ? 0.0 : 3.0; // no warmup timer overlay in free play
     this.lives = isFreePlay ? 999 : 3;
     this.damageTimer = 0;
+    this.damageGraceTime = 5.0; // prevent discouraging instant early deaths
     this.damageFlashTimer = 0;
     this.isGameOver = false;
     this.backingAudioFile = backingAudioFile;
+    this.scrollSpeed = isFreePlay ? 84 : 92;
     
     // Update Lives HUD initially
     let livesStr = isFreePlay ? '♾️ (Practice)' : '<i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i>';
@@ -235,7 +240,7 @@ class PitchFlightGame {
     const canvasHeight = this.canvas.height / (window.devicePixelRatio || 1);
     
     // 1. Fetch Pitch from audio engine
-    const pitchData = window.audioEngine.detectPitch();
+    const pitchData = window.audioEngine.detectPitch({ minClarity: 0.62, noiseGate: 0.0026 });
 
     // Red damage flash border decrementor
     if (this.damageFlashTimer > 0) {
@@ -253,17 +258,22 @@ class PitchFlightGame {
         const clampedMidi = Math.max(this.minMidi, Math.min(this.maxMidi, pitchData.midi));
         const pitchPercent = (clampedMidi - this.minMidi) / this.rangeMidi;
         this.avatarTargetY = canvasHeight * (1 - pitchPercent);
-    this.avatarY += (this.avatarTargetY - this.avatarY) * 0.26;
+        this.flapVelocityY += (this.avatarTargetY - this.avatarY) * 0.11;
+        this.flapVelocityY = Math.max(-260, Math.min(260, this.flapVelocityY));
+        this.avatarY += this.flapVelocityY * dt;
+        this.flapVelocityY *= 0.82;
         this.avatarGlowColor = '#00f2fe';
       } else {
         this.timeSinceLastPitch += dt;
         if (this.timeSinceLastPitch < 0.35) {
           // Keep floating at last height during brief tracking losses
-          this.avatarY += (this.avatarTargetY - this.avatarY) * 0.10;
+          this.flapVelocityY *= 0.92;
+          this.avatarY += (this.avatarTargetY - this.avatarY) * 0.08;
           this.avatarGlowColor = 'rgba(0, 242, 254, 0.5)';
         } else {
           this.avatarTargetY = canvasHeight - 30;
-          this.avatarY += (this.avatarTargetY - this.avatarY) * 0.08;
+          this.flapVelocityY += 220 * dt;
+          this.avatarY += this.flapVelocityY * dt;
           this.avatarGlowColor = 'rgba(255, 255, 255, 0.2)';
         }
       }
@@ -339,7 +349,10 @@ class PitchFlightGame {
       this.avatarTargetY = canvasHeight * (1 - pitchPercent);
       
       // Smooth movement via linear interpolation (prevents erratic jumping)
-      this.avatarY += (this.avatarTargetY - this.avatarY) * 0.26;
+      this.flapVelocityY += (this.avatarTargetY - this.avatarY) * 0.11;
+      this.flapVelocityY = Math.max(-280, Math.min(280, this.flapVelocityY));
+      this.avatarY += this.flapVelocityY * dt;
+      this.flapVelocityY *= 0.84;
       this.avatarGlowColor = '#00f2fe';
       
       // Log history (only if scrolling/active gameplay is moving) using actual pitch
@@ -356,12 +369,14 @@ class PitchFlightGame {
       this.timeSinceLastPitch += dt;
       if (this.timeSinceLastPitch < 0.35) {
         // Grace period: keep airplane floating at last target height with slow stabilization
-        this.avatarY += (this.avatarTargetY - this.avatarY) * 0.10;
+        this.flapVelocityY *= 0.92;
+        this.avatarY += (this.avatarTargetY - this.avatarY) * 0.08;
         this.avatarGlowColor = 'rgba(0, 242, 254, 0.5)';
       } else {
         // Gravity: if silent beyond grace period, drift down
         this.avatarTargetY = canvasHeight - 30;
-        this.avatarY += (this.avatarTargetY - this.avatarY) * 0.08;
+        this.flapVelocityY += 240 * dt;
+        this.avatarY += this.flapVelocityY * dt;
         this.avatarGlowColor = 'rgba(255, 255, 255, 0.2)';
       }
     }
@@ -467,27 +482,33 @@ class PitchFlightGame {
       }
 
       if (!matched && !this.isFreePlay) {
-        // Accumulate damage time if off-pitch or silent
-        this.damageTimer += dt;
-        if (this.damageTimer >= 1.2) {
-          this.lives--;
-          this.damageTimer = -0.5; // invincibility buffer
-          this.damageFlashTimer = 0.3; // trigger damage vignettes red flash
-          
-          // Update Hearts HUD
-          let livesStr = '';
-          for (let i = 0; i < 3; i++) {
-            if (i < this.lives) livesStr += '<i class="fa-solid fa-heart"></i>';
-            else livesStr += '<i class="fa-regular fa-heart"></i>';
-          }
-          const livesVal = document.getElementById('game-lives-val');
-          if (livesVal) livesVal.innerHTML = livesStr;
-          
-          if (this.lives <= 0) {
-            this.gameOver();
-            return;
+        if (this.damageGraceTime > 0) {
+          this.damageGraceTime -= dt;
+        } else {
+          // Accumulate damage time if off-pitch or silent
+          this.damageTimer += dt;
+          if (this.damageTimer >= 2.1) {
+            this.lives--;
+            this.damageTimer = -0.8; // invincibility buffer
+            this.damageFlashTimer = 0.3; // trigger damage vignettes red flash
+            
+            // Update Hearts HUD
+            let livesStr = '';
+            for (let i = 0; i < 3; i++) {
+              if (i < this.lives) livesStr += '<i class="fa-solid fa-heart"></i>';
+              else livesStr += '<i class="fa-regular fa-heart"></i>';
+            }
+            const livesVal = document.getElementById('game-lives-val');
+            if (livesVal) livesVal.innerHTML = livesStr;
+            
+            if (this.lives <= 0) {
+              this.gameOver();
+              return;
+            }
           }
         }
+      } else if (matched) {
+        this.damageTimer = Math.max(0, this.damageTimer - dt * 1.5);
       }
     }
 

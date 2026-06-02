@@ -798,9 +798,9 @@ function updateUIWithUser() {
     document.getElementById('main-nav').style.display = 'flex';
     document.getElementById('user-badge').style.display = 'flex';
     
-    // If we're on the welcome screen, auto-forward to Daily Planner
+    // If we're on the welcome screen, auto-forward to guided practice first.
     if (currentActiveView === 'welcome-view') {
-      switchView('planner-view');
+      switchView('studio-view');
     }
   } else {
     document.getElementById('main-nav').style.display = 'none';
