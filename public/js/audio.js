@@ -14,7 +14,8 @@ class PitchAudioEngine {
     
     // Dynamic noise gate threshold (RMS amplitude)
     // ~ -45dB relative to full-scale 1.0 peak
-    this.noiseGateThreshold = 0.006; 
+    this.noiseGateThreshold = 0.0035;
+    this.minClarityThreshold = 0.68;
     
     // Notes names standard
     this.noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -127,7 +128,7 @@ class PitchAudioEngine {
   }
 
   // Runs Pitch Detection using Normalized Autocorrelation with clarity/confidence check
-  detectPitch() {
+  detectPitch(options = {}) {
     if (!this.analyser) return { frequency: -1, note: "--", midi: -1, cents: 0, rms: 0, volumePct: 0, clarity: 0 };
 
     this.analyser.getFloatTimeDomainData(this.buffer);
@@ -141,7 +142,8 @@ class PitchAudioEngine {
     const volumePct = Math.round(rms * 100);
 
     // If signal is too quiet, it's silence (Noise Gate)
-    if (rms < this.noiseGateThreshold) {
+    const noiseGate = typeof options.noiseGate === 'number' ? options.noiseGate : this.noiseGateThreshold;
+    if (rms < noiseGate) {
       return { frequency: -1, note: "--", midi: -1, cents: 0, rms, volumePct: 0, clarity: 0 };
     }
 
@@ -217,7 +219,8 @@ class PitchAudioEngine {
     // Calculate autocorrelation clarity/confidence score
     const clarity = peakValue / r0;
     // Reject pitches with low clarity to filter out noisy ambient environments (e.g. breath/hum noise)
-    if (clarity < 0.82) {
+    const minClarity = typeof options.minClarity === 'number' ? options.minClarity : this.minClarityThreshold;
+    if (clarity < minClarity) {
       return { frequency: -1, note: "--", midi: -1, cents: 0, rms, volumePct: 0, clarity };
     }
 

@@ -671,17 +671,17 @@ function runVoiceIdentifyLoop() {
   const feedback = document.getElementById('identify-feedback');
   const btn = document.getElementById('profile-identify-btn');
   
-  const pitch = audio.detectPitch();
+  const pitch = audio.detectPitch({ minClarity: 0.58, noiseGate: 0.0022 });
   if (pitch.frequency > 0 && pitch.midi > 20 && pitch.midi < 100) {
     identifyFrequencies.push(pitch.frequency);
-    const progress = Math.min(100, Math.round((identifyFrequencies.length / 30) * 100));
+    const progress = Math.min(100, Math.round((identifyFrequencies.length / 16) * 100));
     feedback.innerText = `HUM RECEIVED: Analyzing pitch... ${progress}%`;
     feedback.style.color = 'var(--neon-green)';
   }
   
   identifyTimeLeft -= 0.016;
   
-  if (identifyFrequencies.length >= 30) {
+  if (identifyFrequencies.length >= 16) {
     // We gathered enough stable pitch samples! Auto-succeed immediately
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Hum to Identify Profile';
@@ -713,9 +713,17 @@ async function sendVocalIdentification(frequency) {
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUser ? currentUser.id : '' },
       body: JSON.stringify({ frequency })
     });
-    
-    if (!response.ok) throw new Error("HTTP error " + response.status);
-    const result = await response.json();
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      // Keep backend match errors visible to users instead of incorrectly routing to offline fallback.
+      if (result && result.error) {
+        feedback.style.color = 'var(--neon-orange)';
+        feedback.innerText = `Match failed: ${result.error}`;
+        return;
+      }
+      throw new Error("HTTP error " + response.status);
+    }
     if (result.queued) throw new Error("Request queued offline");
     if (result.error) {
       feedback.style.color = 'var(--neon-orange)';
@@ -1311,7 +1319,7 @@ function stopCalibrationListening() {
 function runCalibrationLoop() {
   if (!micBtnIsListening()) return;
   
-  const pitch = audio.detectPitch();
+  const pitch = audio.detectPitch({ minClarity: 0.58, noiseGate: 0.0022 });
   if (pitch.frequency > 0 && pitch.midi > 20 && pitch.midi < 100) {
     document.getElementById('calibration-pitch-display').innerText = pitch.note;
     document.getElementById('calibration-pitch-display').style.color = 'var(--neon-green)';
