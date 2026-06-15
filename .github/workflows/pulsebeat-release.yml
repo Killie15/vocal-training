@@ -29,9 +29,15 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+          cache: gradle
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: amyu/setup-android@v2
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;35.0.0"
 
       - name: Read app version
         id: version
@@ -45,8 +51,6 @@ jobs:
 
       - name: Build debug APK
         run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon --stacktrace
-        env:
-          GRADLE_OPTS: -Dorg.gradle.daemon=false
 
       - name: Prepare release assets
         run: |
