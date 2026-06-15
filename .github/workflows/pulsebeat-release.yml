@@ -1,0 +1,80 @@
+# Builds PulseBeat Learner and publishes APK to GitHub Releases when version bumps land on main.
+# Phone app checks heart-rate-logger/release/manifest.json on GitHub raw — no Drive upload needed.
+
+name: PulseBeat release
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "heart-rate-logger/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: heart-rate-logger
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Read app version
+        id: version
+        shell: bash
+        run: |
+          VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K\d+' app/build.gradle.kts)
+          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts)
+          echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "tag=pulsebeat-v$VERSION_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Build debug APK
+        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          cp app/build/outputs/apk/debug/app-debug.apk release/pulsebeat.apk
+          cat > release/manifest.json <<EOF
+          {
+            "versionCode": ${{ steps.version.outputs.code }},
+            "versionName": "${{ steps.version.outputs.name }}",
+            "apkUrl": "https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/pulsebeat.apk",
+            "notes": "PulseBeat Learner v${{ steps.version.outputs.name }}"
+          }
+          EOF
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if gh release view "$TAG" --repo "${{ github.repository }}" 2>/dev/null; then
+            gh release upload "$TAG" release/pulsebeat.apk --repo "${{ github.repository }}" --clobber
+          else
+            gh release create "$TAG" release/pulsebeat.apk \
+              --repo "${{ github.repository }}" \
+              --title "PulseBeat ${{ steps.version.outputs.name }}" \
+              --notes "Automatic OTA build for PulseBeat Learner"
+          fi
+
+      - name: Commit manifest for phone OTA check
+        working-directory: .
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add heart-rate-logger/release/manifest.json
+          git diff --staged --quiet && echo "Manifest unchanged" && exit 0
+          git commit -m "PulseBeat release v${{ steps.version.outputs.name }} [skip ci]"
+          git push
