@@ -60,7 +60,7 @@ class TunerEngine(private val context: Context) {
         val hasPerm = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
             PackageManager.PERMISSION_GRANTED
         if (!hasPerm) {
-            postStatus(TuneState.SILENT, "--", 4, 0f, 0, "Microphone permission denied — allow in Settings")
+            postStatus(TuneState.SILENT, "--", 4, 0f, 0, "Microphone not allowed — tap Allow microphone below")
             return
         }
 

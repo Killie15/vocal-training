@@ -1,6 +1,10 @@
 package com.example.pulsebeatlogger.ui.main
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -18,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.example.pulsebeatlogger.HeartRateState
 import com.example.pulsebeatlogger.SkillToolkitRegistry
 import com.example.pulsebeatlogger.applyReview
@@ -265,15 +271,57 @@ private val UKULELE_CHORDS = listOf(
     UkuleleChord("F", "2010", listOf("A", "C", "F", "A"), "Barre-lite: index on E and A strings")
 )
 
+private fun micGranted(context: Context): Boolean =
+    ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+        PackageManager.PERMISSION_GRANTED
+
+/** Starts [TunerEngine] when mic is granted; re-checks after returning from Settings. */
+@Composable
+private fun rememberUkuleleTuner(context: Context): Triple<TunerEngine, Boolean, () -> Unit> {
+    val tuner = remember { TunerEngine(context) }
+    var granted by remember { mutableStateOf(micGranted(context)) }
+    val requestMic = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted = it }
+
+    LifecycleResumeEffect(Unit) {
+        granted = micGranted(context)
+        onPauseOrDispose {}
+    }
+
+    DisposableEffect(granted) {
+        if (granted) {
+            tuner.start()
+            onDispose { tuner.stop() }
+        } else {
+            onDispose {}
+        }
+    }
+
+    return Triple(tuner, granted) { requestMic.launch(Manifest.permission.RECORD_AUDIO) }
+}
+
+@Composable
+private fun MicPermissionPrompt(onRequest: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            "Microphone access is needed to hear your strings.",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Button(onClick = onRequest) { Text("Allow microphone") }
+    }
+}
+
 @Composable
 private fun UkuleleTunerPanel(context: Context) {
     var selectedString by remember { mutableIntStateOf(0) }
     val target = UKULELE_STRINGS[selectedString]
-    val tuner = remember { TunerEngine(context) }
-    DisposableEffect(Unit) {
-        tuner.start()
-        onDispose { tuner.stop() }
-    }
+    val (tuner, micOk, requestMic) = rememberUkuleleTuner(context)
 
     val centsFromTarget = if (tuner.pitchHz > 0f) {
         (1200 * log2(tuner.pitchHz / target.hz)).roundToInt()
@@ -335,13 +383,17 @@ private fun UkuleleTunerPanel(context: Context) {
                             fontWeight = FontWeight.Medium,
                             color = if (kotlin.math.abs(c) <= 10) Color(0xFF059669) else Color(0xFFD97706)
                         )
-                    } ?: Text(
-                        if (tuner.statusMessage.isNotBlank()) tuner.statusMessage
-                        else "Play the ${target.note} string (phone mic near sound hole)",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                    } ?: if (!micOk) {
+                        MicPermissionPrompt(onRequest = requestMic)
+                    } else {
+                        Text(
+                            if (tuner.statusMessage.isNotBlank()) tuner.statusMessage
+                            else "Play the ${target.note} string (phone mic near sound hole)",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                     if (HeartRateState.isServiceRunning && !HeartRateState.tunerMicActive) {
                         Text(
                             "Tip: Auto-Tracking is ON — tuner takes mic when this tab is open.",
@@ -362,11 +414,7 @@ private fun UkuleleChordsPanel(context: Context) {
     val chord = UKULELE_CHORDS[selectedChord]
     val expectedNote = chord.notes.getOrElse(checkString) { "?" }
 
-    val tuner = remember { TunerEngine(context) }
-    DisposableEffect(Unit) {
-        tuner.start()
-        onDispose { tuner.stop() }
-    }
+    val (tuner, micOk, requestMic) = rememberUkuleleTuner(context)
 
     val noteMatch = tuner.noteName.equals(expectedNote, ignoreCase = true) &&
         tuner.tuneState != TunerEngine.TuneState.SILENT
@@ -389,6 +437,10 @@ private fun UkuleleChordsPanel(context: Context) {
             Text("Frets: ${chord.frets}  ·  ${chord.tip}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Text("Check string ${checkString + 1} — expect $expectedNote", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+
+            if (!micOk) {
+                MicPermissionPrompt(onRequest = requestMic)
+            }
 
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 chord.notes.forEachIndexed { i, note ->

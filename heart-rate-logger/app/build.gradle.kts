@@ -24,8 +24,8 @@ android {
         applicationId = "com.example.pulsebeatlogger"
         minSdk = 24
         targetSdk = 36
-        versionCode = 10
-        versionName = "1.9"
+        versionCode = 11
+        versionName = "1.10"
         buildConfigField("String", "RELEASE_DRIVE_FOLDER_ID", "\"$releaseDriveFolderId\"")
         buildConfigField("String", "UPDATE_MANIFEST_URL", "\"$updateManifestUrl\"")
     }

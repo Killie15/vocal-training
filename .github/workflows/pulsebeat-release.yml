@@ -1,5 +1,4 @@
 # Builds PulseBeat Learner and publishes APK to GitHub Releases when version bumps land on main.
-# Phone app checks heart-rate-logger/release/manifest.json on GitHub raw — no Drive upload needed.
 
 name: PulseBeat release
 
@@ -17,9 +16,6 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: heart-rate-logger
 
     steps:
       - uses: actions/checkout@v4
@@ -32,15 +28,16 @@ jobs:
           cache: gradle
 
       - name: Set up Android SDK
-        uses: amyu/setup-android@v2
+        uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK packages
+      - name: Install SDK packages
         run: |
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platforms;android-36" "build-tools;35.0.0"
 
       - name: Read app version
         id: version
+        working-directory: heart-rate-logger
         shell: bash
         run: |
           VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K\d+' app/build.gradle.kts)
@@ -50,9 +47,11 @@ jobs:
           echo "tag=pulsebeat-v$VERSION_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Build debug APK
+        working-directory: heart-rate-logger
         run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Prepare release assets
+        working-directory: heart-rate-logger
         run: |
           mkdir -p release
           cp app/build/outputs/apk/debug/app-debug.apk release/pulsebeat.apk
@@ -65,22 +64,16 @@ jobs:
           }
           EOF
 
-      - name: Create or update GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG="${{ steps.version.outputs.tag }}"
-          if gh release view "$TAG" --repo "${{ github.repository }}" 2>/dev/null; then
-            gh release upload "$TAG" release/pulsebeat.apk --repo "${{ github.repository }}" --clobber
-          else
-            gh release create "$TAG" release/pulsebeat.apk \
-              --repo "${{ github.repository }}" \
-              --title "PulseBeat ${{ steps.version.outputs.name }}" \
-              --notes "Automatic OTA build for PulseBeat Learner"
-          fi
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: PulseBeat ${{ steps.version.outputs.name }}
+          body: Automatic OTA build for PulseBeat Learner
+          files: heart-rate-logger/release/pulsebeat.apk
+          make_latest: true
 
       - name: Commit manifest for phone OTA check
-        working-directory: .
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

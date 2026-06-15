@@ -25,6 +25,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     
     <!-- Notification/Sensor/Audio Permissions -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
@@ -51,7 +53,7 @@
         <!-- Background Heart Rate Scan and Sync Service -->
         <service
             android:name=".HeartRateService"
-            android:foregroundServiceType="connectedDevice|location"
+            android:foregroundServiceType="connectedDevice|location|microphone"
             android:exported="false" />
 
         <!-- FileProvider for sharing exported JSON files -->
