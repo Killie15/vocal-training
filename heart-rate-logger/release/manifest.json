@@ -1,6 +1,6 @@
 {
   "versionCode": 11,
   "versionName": "1.10",
-  "apkUrl": "https://github.com/Killie15/vocal-training/releases/download/pulsebeat-v1.10/pulsebeat.apk",
+  "apkUrl": "https://raw.githubusercontent.com/Killie15/vocal-training/main/heart-rate-logger/release/pulsebeat.apk",
   "notes": "PulseBeat v1.10 — fixes microphone permission for ukulele tuner."
 }
