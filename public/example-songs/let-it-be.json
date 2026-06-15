@@ -1,0 +1,16 @@
+{
+  "title": "Let It Be",
+  "artist": "The Beatles",
+  "tempo": 120,
+  "chords": [
+    { "name": "C", "startBeat": 0, "duration": 8 },
+    { "name": "G", "startBeat": 8, "duration": 4 },
+    { "name": "Am", "startBeat": 12, "duration": 4 },
+    { "name": "F", "startBeat": 16, "duration": 4 },
+    { "name": "C", "startBeat": 20, "duration": 4 },
+    { "name": "G", "startBeat": 24, "duration": 4 },
+    { "name": "C", "startBeat": 28, "duration": 4 }
+  ],
+  "notes": "A classic with simple chord progression. Great for practicing rhythm.",
+  "difficulty": "Beginner"
+}

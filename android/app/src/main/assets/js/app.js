@@ -34,6 +34,15 @@ let statsOffset = 0;
 const statsLimit = 20;
 let statsHistoryRows = [];
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Global function to initialize local db
 async function initLocalDatabase() {
   try {
@@ -487,6 +496,90 @@ const presetSongs = {
     { midi: 69, time: 3.0, duration: 0.8, name: "tance" },
     { midi: 67, time: 3.9, duration: 0.5, name: "be" },
     { midi: 65, time: 4.5, duration: 0.8, name: "for-" },
+    { midi: 67, time: 5.4, duration: 0.4, name: "got" }
+  ],
+  "riptide": [
+    { midi: 57, time: 0.5, duration: 0.4, name: "I", chord: "Am" },
+    { midi: 57, time: 1.0, duration: 0.4, name: "was" },
+    { midi: 60, time: 1.5, duration: 0.4, name: "scared" },
+    { midi: 57, time: 2.0, duration: 0.4, name: "of" },
+    { midi: 59, time: 2.5, duration: 0.4, name: "den-", chord: "G" },
+    { midi: 57, time: 3.0, duration: 0.4, name: "tists" },
+    { midi: 55, time: 3.5, duration: 0.4, name: "and" },
+    { midi: 55, time: 4.0, duration: 0.4, name: "the" },
+    { midi: 60, time: 4.5, duration: 0.8, name: "dark", chord: "C" },
+    { midi: 60, time: 5.5, duration: 0.4, name: "I" },
+    { midi: 60, time: 6.0, duration: 0.4, name: "was" },
+    { midi: 62, time: 6.5, duration: 0.4, name: "scared" },
+    { midi: 60, time: 7.0, duration: 0.4, name: "of" },
+    { midi: 60, time: 7.5, duration: 0.4, name: "pret-" },
+    { midi: 57, time: 8.0, duration: 0.4, name: "ty" },
+    { midi: 57, time: 8.5, duration: 0.6, name: "girls", chord: "Am" },
+    { midi: 57, time: 9.2, duration: 0.3, name: "and" },
+    { midi: 60, time: 9.6, duration: 0.4, name: "star-" },
+    { midi: 57, time: 10.1, duration: 0.4, name: "ting" },
+    { midi: 59, time: 10.5, duration: 0.4, name: "con-", chord: "G" },
+    { midi: 57, time: 11.0, duration: 0.4, name: "ver-" },
+    { midi: 55, time: 11.5, duration: 0.4, name: "sa-" },
+    { midi: 55, time: 12.0, duration: 0.4, name: "tions" },
+    { midi: 60, time: 12.5, duration: 0.8, name: "Oh", chord: "C" },
+    { midi: 60, time: 13.5, duration: 0.4, name: "all" },
+    { midi: 60, time: 14.0, duration: 0.4, name: "my" },
+    { midi: 62, time: 14.5, duration: 0.4, name: "friends" },
+    { midi: 60, time: 15.0, duration: 0.4, name: "are" },
+    { midi: 60, time: 15.5, duration: 0.4, name: "tur-" },
+    { midi: 57, time: 16.0, duration: 0.4, name: "ning" },
+    { midi: 57, time: 16.5, duration: 1.2, name: "green", chord: "Am" }
+  ],
+  "stand-by-me": [
+    { midi: 60, time: 0.5, duration: 0.3, name: "When", chord: "C" },
+    { midi: 60, time: 0.9, duration: 0.3, name: "the" },
+    { midi: 64, time: 1.3, duration: 0.8, name: "night" },
+    { midi: 64, time: 2.2, duration: 0.4, name: "has" },
+    { midi: 62, time: 2.7, duration: 0.8, name: "come" },
+    { midi: 60, time: 3.6, duration: 0.4, name: "and" },
+    { midi: 60, time: 4.5, duration: 0.4, name: "the", chord: "Am" },
+    { midi: 60, time: 5.0, duration: 0.8, name: "land" },
+    { midi: 60, time: 5.9, duration: 0.4, name: "is" },
+    { midi: 57, time: 6.4, duration: 1.2, name: "dark" },
+    { midi: 60, time: 8.5, duration: 0.4, name: "and", chord: "F" },
+    { midi: 62, time: 9.0, duration: 0.4, name: "the" },
+    { midi: 64, time: 9.5, duration: 0.8, name: "moon" },
+    { midi: 62, time: 10.5, duration: 0.4, name: "is", chord: "G" },
+    { midi: 60, time: 11.0, duration: 0.4, name: "the" },
+    { midi: 59, time: 11.5, duration: 0.4, name: "on-" },
+    { midi: 57, time: 12.0, duration: 0.4, name: "ly" },
+    { midi: 60, time: 12.5, duration: 1.2, name: "light", chord: "C" },
+    { midi: 60, time: 13.8, duration: 0.3, name: "we'll" },
+    { midi: 60, time: 14.3, duration: 1.5, name: "see" }
+  ],
+  "let-it-be": [
+    { midi: 64, time: 0.5, duration: 0.4, name: "When", chord: "C" },
+    { midi: 64, time: 1.0, duration: 0.4, name: "I" },
+    { midi: 64, time: 1.5, duration: 0.4, name: "find" },
+    { midi: 65, time: 2.0, duration: 0.4, name: "my-" },
+    { midi: 67, time: 2.5, duration: 0.8, name: "self", chord: "G" },
+    { midi: 67, time: 3.4, duration: 0.4, name: "in" },
+    { midi: 69, time: 3.9, duration: 0.4, name: "times" },
+    { midi: 69, time: 4.5, duration: 0.4, name: "of", chord: "Am" },
+    { midi: 67, time: 5.0, duration: 0.4, name: "trou-" },
+    { midi: 67, time: 5.5, duration: 0.8, name: "ble" },
+    { midi: 65, time: 6.5, duration: 0.4, name: "Mo-", chord: "F" },
+    { midi: 64, time: 7.0, duration: 0.4, name: "ther" },
+    { midi: 64, time: 7.5, duration: 0.4, name: "Ma-" },
+    { midi: 62, time: 8.0, duration: 0.8, name: "ry" },
+    { midi: 64, time: 8.5, duration: 0.4, name: "comes", chord: "C" },
+    { midi: 64, time: 9.0, duration: 0.4, name: "to" },
+    { midi: 67, time: 9.5, duration: 1.0, name: "me" },
+    { midi: 65, time: 10.7, duration: 0.4, name: "speak-" },
+    { midi: 64, time: 11.2, duration: 0.4, name: "ing" },
+    { midi: 64, time: 11.7, duration: 0.4, name: "words" },
+    { midi: 62, time: 12.5, duration: 0.4, name: "of", chord: "G" },
+    { midi: 60, time: 13.0, duration: 0.4, name: "wis-" },
+    { midi: 62, time: 13.5, duration: 0.6, name: "dom" },
+    { midi: 60, time: 14.5, duration: 0.4, name: "let", chord: "F" },
+    { midi: 60, time: 15.0, duration: 0.4, name: "it" },
+    { midi: 57, time: 15.5, duration: 1.0, name: "be" }
   ]
 };
 
@@ -532,6 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
   safeSetup("setupWarmups", setupWarmups);
   safeSetup("setupSheetMusic", setupSheetMusic);
   safeSetup("setupPlannerView", setupPlannerView);
+  safeSetup("setupAudioSettings", setupAudioSettings);
 
   // Load IndexedDB database first, then user data and curriculum on startup
   try {
@@ -662,17 +756,17 @@ function runVoiceIdentifyLoop() {
   const feedback = document.getElementById('identify-feedback');
   const btn = document.getElementById('profile-identify-btn');
   
-  const pitch = audio.detectPitch();
+  const pitch = audio.detectPitch({ minClarity: 0.52, noiseGate: 0.0022 });
   if (pitch.frequency > 0 && pitch.midi > 20 && pitch.midi < 100) {
     identifyFrequencies.push(pitch.frequency);
-    const progress = Math.min(100, Math.round((identifyFrequencies.length / 30) * 100));
+    const progress = Math.min(100, Math.round((identifyFrequencies.length / 16) * 100));
     feedback.innerText = `HUM RECEIVED: Analyzing pitch... ${progress}%`;
     feedback.style.color = 'var(--neon-green)';
   }
   
   identifyTimeLeft -= 0.016;
   
-  if (identifyFrequencies.length >= 30) {
+  if (identifyFrequencies.length >= 16) {
     // We gathered enough stable pitch samples! Auto-succeed immediately
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-microphone"></i> Hum to Identify Profile';
@@ -704,9 +798,17 @@ async function sendVocalIdentification(frequency) {
       headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUser ? currentUser.id : '' },
       body: JSON.stringify({ frequency })
     });
-    
-    if (!response.ok) throw new Error("HTTP error " + response.status);
-    const result = await response.json();
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      // Keep backend match errors visible to users instead of incorrectly routing to offline fallback.
+      if (result && result.error) {
+        feedback.style.color = 'var(--neon-orange)';
+        feedback.innerText = `Match failed: ${result.error}`;
+        return;
+      }
+      throw new Error("HTTP error " + response.status);
+    }
     if (result.queued) throw new Error("Request queued offline");
     if (result.error) {
       feedback.style.color = 'var(--neon-orange)';
@@ -716,7 +818,7 @@ async function sendVocalIdentification(frequency) {
     
     if (result.matched) {
       feedback.style.color = 'var(--neon-green)';
-      feedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> Welcome back, <strong>${result.user.username}</strong>!<br><span style="font-size: 0.75rem; color: var(--text-muted);">Voice matched within ${result.distance} semitones. Logging in...</span>`;
+      feedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> Welcome back, <strong>${escapeHtml(result.user.username)}</strong>!<br><span style="font-size: 0.75rem; color: var(--text-muted);">Voice matched within ${result.distance} semitones. Logging in...</span>`;
       
       currentUser = result.user;
       saveCurrentUserLocal(currentUser);
@@ -759,7 +861,7 @@ async function sendVocalIdentification(frequency) {
       currentUser = closestUser;
       saveCurrentUserLocal(currentUser);
       feedback.style.color = 'var(--neon-green)';
-      feedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> (Offline) Welcome back, <strong>${closestUser.username}</strong>!<br><span style="font-size: 0.75rem; color: var(--text-muted);">Voice matched within ${Math.round(minDistance * 10) / 10} semitones. Logging in...</span>`;
+      feedback.innerHTML = `<i class="fa-solid fa-circle-check"></i> (Offline) Welcome back, <strong>${escapeHtml(closestUser.username)}</strong>!<br><span style="font-size: 0.75rem; color: var(--text-muted);">Voice matched within ${Math.round(minDistance * 10) / 10} semitones. Logging in...</span>`;
       setTimeout(() => {
         updateUIWithUser();
         feedback.style.display = 'none';
@@ -781,9 +883,9 @@ function updateUIWithUser() {
     document.getElementById('main-nav').style.display = 'flex';
     document.getElementById('user-badge').style.display = 'flex';
     
-    // If we're on the welcome screen, auto-forward to Daily Planner
+    // If we're on the welcome screen, auto-forward to guided practice first.
     if (currentActiveView === 'welcome-view') {
-      switchView('planner-view');
+      switchView('practice-view');
     }
   } else {
     document.getElementById('main-nav').style.display = 'none';
@@ -845,9 +947,19 @@ function switchView(viewId, pushHistory = true) {
     sessionStorage.setItem('lastView', viewId);
   }
 
+  // Map sub-views to their respective main bottom nav tabs
+  let highlightViewId = viewId;
+  if (viewId === 'planner-view') {
+    highlightViewId = 'dashboard-view';
+  } else if (viewId === 'character-view') {
+    highlightViewId = 'profile-view';
+  } else if (['studio-view', 'tuner-view', 'warmups-view', 'sheet-view', 'uploader-view'].includes(viewId)) {
+    highlightViewId = 'practice-view';
+  }
+
   // Update navigation visual highlight
   document.querySelectorAll('.nav-link').forEach(link => {
-    if (link.getAttribute('data-view') === viewId) {
+    if (link.getAttribute('data-view') === highlightViewId) {
       link.classList.add('active');
     } else {
       link.classList.remove('active');
@@ -991,33 +1103,12 @@ function setupProfileForm() {
     currentUser = newUser;
     saveCurrentUserLocal(currentUser);
 
-    // 2. Set preset ranges or go to Calibration view
-    if (voicePreference === 'Custom') {
-      switchView('calibration-view');
-      startCalibrationProcess();
-    } else {
-      // Apply standard ranges
-      let minHz = 82.4; // E2 (Bass)
-      let maxHz = 329.6; // E4
-      
-      if (voicePreference === 'Tenor') {
-        minHz = 130.8; // C3
-        maxHz = 523.3; // C5
-      } else if (voicePreference === 'Alto') {
-        minHz = 174.6; // F3
-        maxHz = 698.5; // F5
-      } else if (voicePreference === 'Soprano') {
-        minHz = 261.6; // C4
-        maxHz = 1046.5; // C6
-      }
-      
-      currentUser.voice_type = voicePreference;
-      currentUser.min_pitch_hz = minHz;
-      currentUser.max_pitch_hz = maxHz;
-      
-      await saveUserProfile();
-      updateUIWithUser();
-    }
+    // Store selected preference for default range fallback if they click Skip
+    sessionStorage.setItem('pendingRegisterPreference', voicePreference === 'Custom' ? 'Tenor' : voicePreference);
+    
+    // Always route to Calibration (Assessment) screen first
+    switchView('calibration-view');
+    startCalibrationProcess();
   });
 
   // Select existing profile
@@ -1104,7 +1195,7 @@ let highMidiCalibrated = 0;
 let isCountingDown = false;
 let countdownValue = 3;
 let countdownIntervalId = null;
-let calibrationTimeLeft = 15;
+let calibrationTimeLeft = 20;
 let calibrationRecordIntervalId = null;
 let calibrationHasVoiceStarted = false;
 let calibrationLastVoiceTime = 0;
@@ -1115,7 +1206,7 @@ function startCalibrationProcess() {
   lowMidiCalibrated = 0;
   highMidiCalibrated = 0;
   isCountingDown = false;
-  calibrationTimeLeft = 15;
+  calibrationTimeLeft = 20;
   calibrationHasVoiceStarted = false;
   calibrationLastVoiceTime = 0;
   
@@ -1123,7 +1214,7 @@ function startCalibrationProcess() {
   if (calibrationRecordIntervalId) clearInterval(calibrationRecordIntervalId);
   
   document.getElementById('calibration-step-title').innerText = "Voice Range Finder";
-  document.getElementById('calibration-step-desc').innerText = "Click the mic, wait for the 3-second countdown, then free hum for up to 15 seconds. Slide from your lowest note to your highest. We will automatically finish when you stop singing!";
+  document.getElementById('calibration-step-desc').innerText = "Click the mic, wait for the 3-second countdown, then free hum for up to 20 seconds. Slide your voice as high as you comfortably can. Press the button again at any time to stop early! We will find your maximum note and set your range by going 7 notes below it.";
   
   document.getElementById('calib-base-note').innerText = "--";
   document.getElementById('calib-low-note').innerText = "--";
@@ -1135,6 +1226,8 @@ function startCalibrationProcess() {
   
   document.getElementById('calib-next-btn').style.display = 'none';
   document.getElementById('calibration-mic-btn').style.display = 'flex';
+  const skipBtn = document.getElementById('calib-skip-btn');
+  if (skipBtn) skipBtn.style.display = 'block';
 }
 
 function setupCalibration() {
@@ -1146,7 +1239,7 @@ function setupCalibration() {
     if (isCountingDown) return;
     
     if (micBtn.classList.contains('listening')) {
-      stopCalibrationListening();
+      finishCalibrationRecording();
     } else {
       // Start 3-second countdown before listening
       try {
@@ -1173,9 +1266,9 @@ function setupCalibration() {
             document.getElementById('calibration-pitch-display').style.color = 'var(--neon-green)';
             micBtn.style.background = 'var(--accent-magenta)';
             
-            // Start 15-second active recording
+            // Start 20-second active recording
             calibrationMidiPoints = [];
-            calibrationTimeLeft = 15;
+            calibrationTimeLeft = 20;
             calibrationHasVoiceStarted = false;
             calibrationLastVoiceTime = Date.now();
             
@@ -1188,7 +1281,7 @@ function setupCalibration() {
             calibrationRecordIntervalId = setInterval(() => {
               calibrationTimeLeft--;
               if (progressBar) {
-                progressBar.style.width = `${((15 - calibrationTimeLeft) / 15) * 100}%`;
+                progressBar.style.width = `${((20 - calibrationTimeLeft) / 20) * 100}%`;
               }
               
               if (calibrationTimeLeft <= 0) {
@@ -1224,8 +1317,40 @@ function setupCalibration() {
     
     await saveUserProfile();
     updateUIWithUser();
-    switchView('dashboard-view');
+    switchView('practice-view');
   });
+
+  const skipBtn = document.getElementById('calib-skip-btn');
+  if (skipBtn) {
+    skipBtn.addEventListener('click', async () => {
+      // User clicked skip. Stop active listening if any.
+      stopCalibrationListening();
+      
+      const voicePreference = sessionStorage.getItem('pendingRegisterPreference') || 'Tenor';
+      
+      let minHz = 82.4; // E2 (Bass)
+      let maxHz = 329.6; // E4
+      
+      if (voicePreference === 'Tenor') {
+        minHz = 130.8; // C3
+        maxHz = 523.3; // C5
+      } else if (voicePreference === 'Alto') {
+        minHz = 174.6; // F3
+        maxHz = 698.5; // F5
+      } else if (voicePreference === 'Soprano') {
+        minHz = 261.6; // C4
+        maxHz = 1046.5; // C6
+      }
+      
+      currentUser.voice_type = voicePreference;
+      currentUser.min_pitch_hz = minHz;
+      currentUser.max_pitch_hz = maxHz;
+      
+      await saveUserProfile();
+      updateUIWithUser();
+      switchView('practice-view');
+    });
+  }
 }
 
 function finishCalibrationRecording() {
@@ -1240,18 +1365,19 @@ function finishCalibrationRecording() {
     return;
   }
 
-  // Calculate final bounds using robust percentiles (eliminates audio glitch squeaks)
+  // Calculate final bounds: max note and lowest note exactly 7 notes (semitones) below that max
   calibrationMidiPoints.sort((a,b) => a - b);
   const len = calibrationMidiPoints.length;
   
-  lowMidiCalibrated = calibrationMidiPoints[Math.floor(len * 0.05)]; // 5th percentile
-  highMidiCalibrated = calibrationMidiPoints[Math.floor(len * 0.95)]; // 95th percentile
-  baseMidiCalibrated = calibrationMidiPoints[Math.floor(len * 0.50)]; // 50th percentile (median)
-
-  // Safeguard octave range
-  if (highMidiCalibrated <= lowMidiCalibrated) {
-    highMidiCalibrated = lowMidiCalibrated + 12;
-  }
+  // Use 98th percentile to filter out transient clicks/noise spikes while capturing the actual maximum note reached
+  const highIndex = Math.min(len - 1, Math.floor(len * 0.98));
+  highMidiCalibrated = calibrationMidiPoints[highIndex];
+  
+  // Min is exactly 7 notes (semitones) below the maximum
+  lowMidiCalibrated = highMidiCalibrated - 7;
+  
+  // Base note is the median of the range
+  baseMidiCalibrated = Math.round((highMidiCalibrated + lowMidiCalibrated) / 2);
 
   // Update final UI texts
   document.getElementById('calib-base-note').innerText = audio.midiToNoteName(baseMidiCalibrated);
@@ -1273,6 +1399,8 @@ function finishCalibrationRecording() {
 
   // Swap buttons
   document.getElementById('calibration-mic-btn').style.display = 'none';
+  const skipBtn = document.getElementById('calib-skip-btn');
+  if (skipBtn) skipBtn.style.display = 'none';
   const nextBtn = document.getElementById('calib-next-btn');
   nextBtn.innerText = "Save & Finish";
   nextBtn.style.display = 'block';
@@ -1302,7 +1430,7 @@ function stopCalibrationListening() {
 function runCalibrationLoop() {
   if (!micBtnIsListening()) return;
   
-  const pitch = audio.detectPitch();
+  const pitch = audio.detectPitchForTuning(null, { minClarity: 0.48, noiseGate: 0.002 });
   if (pitch.frequency > 0 && pitch.midi > 20 && pitch.midi < 100) {
     document.getElementById('calibration-pitch-display').innerText = pitch.note;
     document.getElementById('calibration-pitch-display').style.color = 'var(--neon-green)';
@@ -1538,7 +1666,7 @@ function setupTuner() {
     if (!toggleBtn.classList.contains('btn-accent')) return;
 
     if (tunerMode === 'chromatic') {
-      const data = audio.detectPitch();
+      const data = audio.detectPitchForTuning(null, { minClarity: 0.48, noiseGate: 0.002 });
       
       if (data.frequency > 0) {
         noteDisplay.innerText = data.note;
@@ -1794,7 +1922,10 @@ function setupKaraokeUploader() {
           'danny-boy': 'Danny Boy (Karaoke)',
           'la-cucaracha': 'La Cucaracha (Karaoke)',
           'red-river': 'Red River Valley (Karaoke)',
-          'auld-lang-syne': 'Auld Lang Syne (Karaoke)'
+          'auld-lang-syne': 'Auld Lang Syne (Karaoke)',
+          'riptide': 'Riptide (Strum & Sing)',
+          'stand-by-me': 'Stand By Me (Strum & Sing)',
+          'let-it-be': 'Let It Be (Strum & Sing)'
         };
         const levelData = {
           id: -100, // Custom Karaoke
@@ -1834,7 +1965,21 @@ function handleMidiFile(file) {
 // 7. Launch Level & Bind Audio Live Streams
 async function launchGameLevel(lvl) {
   switchView('game-view');
-  
+
+  // Show quick exit button in landscape mode
+  const quickExitBtn = document.getElementById('game-quick-exit-btn');
+  if (quickExitBtn) {
+    if (window.innerWidth > window.innerHeight) {
+      quickExitBtn.style.display = 'block';
+    }
+    quickExitBtn.onclick = () => {
+      if (game && game.isRunning) {
+        game.stop();
+      }
+      switchView('dashboard-view');
+    };
+  }
+
   // Set HUD Title
   document.getElementById('game-task-name').innerText = lvl.name;
   
@@ -2133,6 +2278,7 @@ async function showVocalReportCard(levelId, report) {
   // POST progress to SQLite database if this is a real level
   if (levelId > 0) {
     try {
+      const queueId = crypto.randomUUID ? crypto.randomUUID() : 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       const response = await fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-User-Id': currentUser ? currentUser.id : '' },
@@ -2145,6 +2291,7 @@ async function showVocalReportCard(levelId, report) {
           agility_score: report.agilityScore,
           feedback_text: report.feedbackText,
           notePerformanceData: report.notePerformanceData,
+          queue_id: queueId,
           completed_at: new Date().toISOString()
         })
       });
@@ -2159,6 +2306,7 @@ async function showVocalReportCard(levelId, report) {
       // Queue for offline sync
       addToOfflineQueueLocal({
         type: 'progress',
+        queueId: crypto.randomUUID ? crypto.randomUUID() : 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
         level_id: levelId,
         stars_earned: report.stars,
         score: report.score,
@@ -2469,6 +2617,11 @@ function setupVocalStudio() {
   const flatBar = document.getElementById('studio-cents-bar-flat');
   const sharpBar = document.getElementById('studio-cents-bar-sharp');
   
+  const miniNoteDisplay = document.getElementById('studio-mini-note-val');
+  const miniRegisterDisplay = document.getElementById('studio-mini-register-val');
+  const miniCentsDisplay = document.getElementById('studio-mini-cents-val');
+  const miniVolDisplay = document.getElementById('studio-mini-vol-val');
+  
   const avgAccDisplay = document.getElementById('studio-avg-acc');
   const maxHoldDisplay = document.getElementById('studio-max-hold');
   const estJitterDisplay = document.getElementById('studio-est-jitter');
@@ -2691,9 +2844,19 @@ function setupVocalStudio() {
   function runStudioLoop() {
     if (!studioIsActive) return;
 
-    // Detect pitch
-    const pitch = audio.detectPitch();
     const mode = focusSelect.value;
+    let targetMidiForDetect = -1;
+    if (mode === 'pitch') {
+      targetMidiForDetect = parseInt(targetSelect.value, 10);
+    } else if (mode === 'vibrato') {
+      targetMidiForDetect = parseInt(document.getElementById('studio-vibrato-select').value, 10);
+    }
+
+    // Detect pitch (tuning profile: better for quiet voice + correct octave near target)
+    const pitch = audio.detectPitchForTuning(
+      targetMidiForDetect >= 0 ? targetMidiForDetect : null,
+      { minClarity: 0.48, noiseGate: 0.002 }
+    );
     
     studioTime += 0.016; // increment timer roughly at 60fps
     studioTotalFrames++;
@@ -2703,10 +2866,10 @@ function setupVocalStudio() {
 
     // Mode-specific calculations
     if (mode === 'pitch') {
-      const targetMidi = parseInt(targetSelect.value);
+      const targetMidi = parseInt(targetSelect.value, 10);
       effectiveTargetMidi = targetMidi;
-      if (pitch.frequency > 0) {
-        cents = (targetMidi !== -1) ? audio.getCentsDeviation(pitch.frequency, targetMidi) : pitch.cents;
+      if (pitch.frequency > 0 && targetMidi !== -1) {
+        cents = audio.getCentsDeviation(pitch.frequency, targetMidi);
       }
     } else if (mode === 'chord') {
       const chordVal = document.getElementById('studio-chord-select').value;
@@ -2814,19 +2977,44 @@ function setupVocalStudio() {
       else if (pitch.midi < 73) registerDisplay.style.color = "var(--neon-purple)";
       else registerDisplay.style.color = "var(--neon-cyan)";
 
+      const centsAbs = Math.abs(cents);
       centsDisplay.innerText = `${cents > 0 ? '+' : ''}${cents} cents`;
-      
-      if (cents < 0) {
-        const width = Math.min(50, Math.abs(cents)) * 2;
+
+      // Update mini-HUD elements
+      if (miniNoteDisplay) miniNoteDisplay.innerText = pitch.note;
+      if (miniRegisterDisplay) {
+        miniRegisterDisplay.innerText = register.split(' ')[0]; // CHEST, HEAD, MIXED etc.
+        miniRegisterDisplay.style.color = registerDisplay.style.color;
+      }
+      if (miniCentsDisplay) {
+        miniCentsDisplay.innerText = `${cents > 0 ? '+' : ''}${cents}c`;
+        miniCentsDisplay.style.color = centsDisplay.style.color;
+      }
+
+      if (mode === 'pitch' && effectiveTargetMidi >= 0) {
+        const targetName = audio.midiToNoteName(effectiveTargetMidi);
+        const targetHz = Math.round(audio.midiToFreq(effectiveTargetMidi) * 10) / 10;
+        const youHz = Math.round(pitch.frequency * 10) / 10;
+        modeGuide.innerText = `Target: ${targetName} (${targetHz} Hz) | You: ${pitch.note} (${youHz} Hz)`;
+        modeGuide.style.color = centsAbs <= 20 ? 'var(--neon-green)' : 'var(--neon-orange)';
+      }
+
+      if (centsAbs <= 8) {
+        flatBar.style.width = '0%';
+        sharpBar.style.width = '0%';
+        centsDisplay.className = 'tuner-cents-deviation tuned';
+        centsDisplay.style.color = 'var(--neon-green)';
+      } else if (cents < 0) {
+        const width = Math.min(50, centsAbs) * 2;
         flatBar.style.width = `${width}%`;
-        sharpBar.style.width = `0%`;
-        centsDisplay.className = "tuner-cents-deviation flat";
+        sharpBar.style.width = '0%';
+        centsDisplay.className = 'tuner-cents-deviation flat';
         centsDisplay.style.color = 'var(--neon-orange)';
       } else {
-        const width = Math.min(50, cents) * 2;
+        const width = Math.min(50, centsAbs) * 2;
         sharpBar.style.width = `${width}%`;
-        flatBar.style.width = `0%`;
-        centsDisplay.className = "tuner-cents-deviation sharp";
+        flatBar.style.width = '0%';
+        centsDisplay.className = 'tuner-cents-deviation sharp';
         centsDisplay.style.color = 'var(--neon-purple)';
       }
 
@@ -2849,15 +3037,21 @@ function setupVocalStudio() {
       if (studioDynFill) {
         studioDynFill.style.width = `${Math.min(100, vol)}%`;
       }
-
-      const centsAbs = Math.abs(cents);
       
-      if (centsAbs <= 5) {
-        centsDisplay.style.color = 'var(--neon-green)';
-        centsDisplay.innerText = 'In Tune!';
+      // Update mini-HUD Volume element
+      if (miniVolDisplay) {
+        miniVolDisplay.innerText = `${vol}%`;
+        miniVolDisplay.style.color = studioDynVal ? studioDynVal.style.color : '';
       }
 
-      if (centsAbs <= 40) {
+      if (centsAbs <= 20) {
+        centsDisplay.style.color = 'var(--neon-green)';
+        if (centsAbs <= 8) {
+          centsDisplay.innerText = 'In Tune!';
+        }
+      }
+
+      if (centsAbs <= 50) {
         studioMatchFrames++;
         studioCurrentHoldFrames++;
         if (studioCurrentHoldFrames > studioMaxHoldFrames) {
@@ -2887,6 +3081,12 @@ function setupVocalStudio() {
       centsDisplay.style.color = '';
       flatBar.style.width = `0%`;
       sharpBar.style.width = `0%`;
+      
+      // Reset mini-HUD
+      if (miniNoteDisplay) miniNoteDisplay.innerText = "--";
+      if (miniRegisterDisplay) miniRegisterDisplay.innerText = "--";
+      if (miniCentsDisplay) miniCentsDisplay.innerText = "--";
+      if (miniVolDisplay) miniVolDisplay.innerText = "--";
       
       const studioDynVal = document.getElementById('studio-dynamics-val');
       const studioDynFill = document.getElementById('studio-dynamics-fill');
@@ -4306,6 +4506,10 @@ async function syncOfflineQueue() {
         if (item.type === 'practice_log') {
           endpoint = '/api/practice-log';
         }
+        const requestBody = { ...item };
+        if (item.type === 'progress') {
+          requestBody.queue_id = item.queueId || item.queue_id;
+        }
         
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -4313,7 +4517,7 @@ async function syncOfflineQueue() {
             'Content-Type': 'application/json',
             'X-User-Id': item.user_id || (currentUser ? currentUser.id : '')
           },
-          body: JSON.stringify(item)
+          body: JSON.stringify(requestBody)
         });
         
         // Sync triggers (queued response means server is still offline, retry later)
@@ -4466,4 +4670,177 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+function setupAudioSettings() {
+  const globalSettingsBtn = document.getElementById('global-settings-btn');
+  const audioSettingsDrawer = document.getElementById('audio-settings-drawer');
+  const gainSlider = document.getElementById('settings-gain-slider');
+  const gainVal = document.getElementById('settings-gain-val');
+  const gateSlider = document.getElementById('settings-gate-slider');
+  const gateVal = document.getElementById('settings-gate-val');
+  const claritySlider = document.getElementById('settings-clarity-slider');
+  const clarityVal = document.getElementById('settings-clarity-val');
+  const latencySlider = document.getElementById('settings-latency-slider');
+  const latencyVal = document.getElementById('settings-latency-val');
+  const closeBtn = document.getElementById('settings-close-btn');
+
+  if (!globalSettingsBtn || !audioSettingsDrawer || !gainSlider || !gainVal || !latencySlider || !latencyVal || !closeBtn || !gateSlider || !gateVal || !claritySlider || !clarityVal) {
+    console.warn('[Audio Settings] Settings DOM elements not found.');
+    return;
+  }
+
+  // Toggle drawer
+  globalSettingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isVisible = audioSettingsDrawer.style.display === 'block';
+    audioSettingsDrawer.style.display = isVisible ? 'none' : 'block';
+  });
+
+  // Close drawer
+  closeBtn.addEventListener('click', () => {
+    audioSettingsDrawer.style.display = 'none';
+  });
+
+  // Prevent clicks inside the drawer from bubbling and closing it
+  audioSettingsDrawer.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // Click outside drawer to close
+  window.addEventListener('click', () => {
+    audioSettingsDrawer.style.display = 'none';
+  });
+
+  // Load from localStorage on init
+  const cachedGain = localStorage.getItem('micGain');
+  if (cachedGain !== null) {
+    const val = parseFloat(cachedGain);
+    gainSlider.value = val;
+    gainVal.innerText = val.toFixed(1) + 'x';
+    if (audio) {
+      audio.setGain(val);
+    }
+  } else {
+    // Default
+    gainVal.innerText = parseFloat(gainSlider.value).toFixed(1) + 'x';
+  }
+
+  const cachedGate = localStorage.getItem('micNoiseGate');
+  if (cachedGate !== null) {
+    const val = parseFloat(cachedGate);
+    gateSlider.value = val;
+    gateVal.innerText = val.toFixed(4);
+    if (audio) {
+      audio.setNoiseGate(val);
+    }
+  } else {
+    // Default
+    gateVal.innerText = parseFloat(gateSlider.value).toFixed(4);
+  }
+
+  const cachedClarity = localStorage.getItem('micMinClarity');
+  if (cachedClarity !== null) {
+    const val = parseFloat(cachedClarity);
+    claritySlider.value = val;
+    clarityVal.innerText = val.toFixed(2);
+    if (audio) {
+      audio.setMinClarity(val);
+    }
+  } else {
+    // Default
+    clarityVal.innerText = parseFloat(claritySlider.value).toFixed(2);
+  }
+
+  const cachedLatency = localStorage.getItem('latencyOffset');
+  if (cachedLatency !== null) {
+    const val = parseInt(cachedLatency, 10);
+    latencySlider.value = val;
+    latencyVal.innerText = val + ' ms';
+    if (game) {
+      game.setLatencyOffset(val);
+    }
+  } else {
+    // Default
+    latencyVal.innerText = latencySlider.value + ' ms';
+  }
+
+  // Sliders event binding
+  gainSlider.addEventListener('input', () => {
+    const val = parseFloat(gainSlider.value);
+    gainVal.innerText = val.toFixed(1) + 'x';
+    if (audio) {
+      audio.setGain(val);
+    }
+    localStorage.setItem('micGain', val);
+  });
+
+  gateSlider.addEventListener('input', () => {
+    const val = parseFloat(gateSlider.value);
+    gateVal.innerText = val.toFixed(4);
+    if (audio) {
+      audio.setNoiseGate(val);
+    }
+    localStorage.setItem('micNoiseGate', val);
+  });
+
+  claritySlider.addEventListener('input', () => {
+    const val = parseFloat(claritySlider.value);
+    clarityVal.innerText = val.toFixed(2);
+    if (audio) {
+      audio.setMinClarity(val);
+    }
+    localStorage.setItem('micMinClarity', val);
+  });
+
+  latencySlider.addEventListener('input', () => {
+    const val = parseInt(latencySlider.value, 10);
+    latencyVal.innerText = val + ' ms';
+    if (game) {
+      game.setLatencyOffset(val);
+    }
+    localStorage.setItem('latencyOffset', val);
+  });
+}
+
+// Screen Orientation Blocker and Programmatic Lock
+document.addEventListener('DOMContentLoaded', () => {
+  const blocker = document.getElementById('orientation-blocker');
+  const dismissBtn = document.getElementById('dismiss-orientation-btn');
+  
+  if (blocker && dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      blocker.classList.add('bypassed');
+    });
+    
+    // Listen for orientation changes to reset bypass state if the user actually rotates to landscape
+    const landscapeMedia = window.matchMedia('(orientation: landscape)');
+    try {
+      landscapeMedia.addEventListener('change', (e) => {
+        if (e.matches) {
+          blocker.classList.remove('bypassed');
+        }
+      });
+    } catch (err) {
+      // Fallback for older browsers
+      window.addEventListener('resize', () => {
+        if (window.innerWidth > window.innerHeight) {
+          blocker.classList.remove('bypassed');
+        }
+      });
+    }
+  }
+
+  // Attempt orientation lock on user interactions
+  const triggerLock = () => {
+    if (screen.orientation && typeof screen.orientation.lock === 'function') {
+      screen.orientation.lock('landscape').catch((e) => {
+        // Lock failed (common on desktop/iOS, safely ignore)
+      });
+    }
+  };
+
+  document.body.addEventListener('click', triggerLock, { once: false });
+});
+
+
 

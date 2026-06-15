@@ -1,0 +1,205 @@
+[
+  {
+    "id": 101,
+    "instrument": "ukulele",
+    "milestone": 1,
+    "name": "Open String A",
+    "type": "string_match",
+    "targetString": 3,
+    "targetFret": 0,
+    "targetNote": "A4",
+    "targetMidi": 69,
+    "durationMs": 4000,
+    "skill": "String Recognition",
+    "difficulty": "Beginner",
+    "description": "Pluck the open A string (3rd string). Identify by the pitch and string position.",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "stringIndices": [0, 1, 2, 3]
+    }
+  },
+  {
+    "id": 102,
+    "instrument": "ukulele",
+    "milestone": 2,
+    "name": "Open String C",
+    "type": "string_match",
+    "targetString": 1,
+    "targetFret": 0,
+    "targetNote": "C4",
+    "targetMidi": 60,
+    "durationMs": 4000,
+    "skill": "String Recognition",
+    "difficulty": "Beginner",
+    "description": "Pluck the open C string (4th string). Listen for the bright C pitch.",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "stringIndices": [0, 1, 2, 3]
+    }
+  },
+  {
+    "id": 103,
+    "instrument": "ukulele",
+    "milestone": 3,
+    "name": "Open String E",
+    "type": "string_match",
+    "targetString": 2,
+    "targetFret": 0,
+    "targetNote": "E4",
+    "targetMidi": 64,
+    "durationMs": 4000,
+    "skill": "String Recognition",
+    "difficulty": "Beginner",
+    "description": "Pluck the open E string (2nd string). Middle-high pitched string.",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "stringIndices": [0, 1, 2, 3]
+    }
+  },
+  {
+    "id": 104,
+    "instrument": "ukulele",
+    "milestone": 4,
+    "name": "Open String G",
+    "type": "string_match",
+    "targetString": 0,
+    "targetFret": 0,
+    "targetNote": "G4",
+    "targetMidi": 67,
+    "durationMs": 4000,
+    "skill": "String Recognition",
+    "difficulty": "Beginner",
+    "description": "Pluck the open G string (1st string). Highest pitched of the 4 strings.",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "stringIndices": [0, 1, 2, 3]
+    }
+  },
+  {
+    "id": 105,
+    "instrument": "ukulele",
+    "milestone": 5,
+    "name": "String Roulette - All Strings",
+    "type": "string_sequence",
+    "notes": [69, 60, 64, 67, 69, 64, 60, 67],
+    "durationMs": 8000,
+    "skill": "String Identification",
+    "difficulty": "Easy",
+    "description": "Random string plucking challenge. Listen and identify which of the 4 open strings is being played in sequence.",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "stringIndices": [0, 1, 2, 3],
+      "randomOrder": true
+    }
+  },
+  {
+    "id": 106,
+    "instrument": "ukulele",
+    "milestone": 6,
+    "name": "C Major - First Finger Position",
+    "type": "chord_hold",
+    "targetChord": "C",
+    "chordFrets": [0, 0, 0, 3],
+    "chordStrings": [0, 1, 2, 3],
+    "durationMs": 5000,
+    "skill": "Chord Formation",
+    "difficulty": "Beginner",
+    "description": "Form C Major: Index finger on 3rd fret of A string. Strum and hold for clean sound.",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "chordName": "C",
+      "fingering": {
+        "string0": { "fret": 0, "finger": "open" },
+        "string1": { "fret": 0, "finger": "open" },
+        "string2": { "fret": 0, "finger": "open" },
+        "string3": { "fret": 3, "finger": "index" }
+      }
+    }
+  },
+  {
+    "id": 107,
+    "instrument": "ukulele",
+    "milestone": 7,
+    "name": "G Major - Two Finger Stretch",
+    "type": "chord_hold",
+    "targetChord": "G",
+    "chordFrets": [0, 2, 3, 2],
+    "chordStrings": [0, 1, 2, 3],
+    "durationMs": 5000,
+    "skill": "Chord Formation",
+    "difficulty": "Easy",
+    "description": "Form G Major: Index on 2nd fret (C string), Middle on 3rd fret (E string), Ring on 2nd fret (A string). Trickier stretch!",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "chordName": "G",
+      "fingering": {
+        "string0": { "fret": 0, "finger": "open" },
+        "string1": { "fret": 2, "finger": "index" },
+        "string2": { "fret": 3, "finger": "middle" },
+        "string3": { "fret": 2, "finger": "ring" }
+      }
+    }
+  },
+  {
+    "id": 108,
+    "instrument": "ukulele",
+    "milestone": 8,
+    "name": "F Major - Barré Challenge",
+    "type": "chord_hold",
+    "targetChord": "F",
+    "chordFrets": [2, 0, 1, 0],
+    "chordStrings": [0, 1, 2, 3],
+    "durationMs": 6000,
+    "skill": "Barré Technique",
+    "difficulty": "Medium",
+    "description": "Form F Major: Barré index finger on frets 0-2. More advanced technique requiring finger strength.",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "chordName": "F",
+      "fingering": {
+        "string0": { "fret": 2, "finger": "index" },
+        "string1": { "fret": 0, "finger": "open" },
+        "string2": { "fret": 1, "finger": "middle" },
+        "string3": { "fret": 0, "finger": "open" }
+      }
+    }
+  },
+  {
+    "id": 109,
+    "instrument": "ukulele",
+    "milestone": 9,
+    "name": "Chord Progression: C-G-F",
+    "type": "chord_progression",
+    "chordSequence": ["C", "G", "F", "C"],
+    "chordDurations": [2000, 2000, 2000, 2000],
+    "skill": "Chord Changes",
+    "difficulty": "Medium",
+    "description": "Practice switching between C, G, and F chords smoothly. Count beats and prepare fingers ahead.",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "chords": {
+        "C": { "frets": [0, 0, 0, 3], "name": "C Major" },
+        "G": { "frets": [0, 2, 3, 2], "name": "G Major" },
+        "F": { "frets": [2, 0, 1, 0], "name": "F Major" }
+      }
+    }
+  },
+  {
+    "id": 110,
+    "instrument": "ukulele",
+    "milestone": 10,
+    "name": "Strumming Pattern - Down-Down-Up",
+    "type": "strumming_pattern",
+    "pattern": ["down", "down", "up", "down", "up"],
+    "tempo": 120,
+    "durationMs": 8000,
+    "skill": "Strumming Rhythm",
+    "difficulty": "Medium",
+    "description": "Practice the classic ukulele strumming pattern: Down-Down-Up. Hold C chord and follow the rhythm guide.",
+    "ukuleleData": {
+      "strings": ["G4", "C4", "E4", "A4"],
+      "baseChord": "C",
+      "pattern": ["down", "down", "up", "down", "up"]
+    }
+  }
+]

@@ -32,6 +32,11 @@ class PitchFlightGame {
     this.stars = []; // background parallax stars
     this.userPitchHistory = []; // records { time, midi } for drawing the final chart
     
+    // Smooth flying & lag calibration values
+    this.latencyOffset = 0.060; // 60ms default latency offset (reduced for better responsiveness)
+    this.emaMidi = null; // Exponential Moving Average of target pitch
+    this.emaAlpha = 0.35; // EMA smoothing factor (0.35 for more responsive pitch tracking)
+
     // Frame stats
     this.score = 0;
     this.accuracySum = 0;
@@ -91,7 +96,7 @@ class PitchFlightGame {
   }
 
   // Start Level or Custom Song
-  start(levelData, calibMinMidi, calibMaxMidi, backingAudioFile = null, onComplete, isFreePlay = false) {
+  start(levelData, calibMinMidi, calibMaxMidi, backingAudioFile = null, onComplete, isFreePlay = false, difficulty = 'Beginner') {
     this.isActive = true;
     this.isPaused = false;
     this.gameTime = 0;
@@ -102,6 +107,7 @@ class PitchFlightGame {
     this.correctActiveFrames = 0;
     this.starsEarned = 0;
     this.flapVelocityY = 0;
+    this.difficulty = difficulty; // Store for star threshold calculation
     
     // Warmup & Lives state
     this.isFreePlay = isFreePlay;
@@ -239,8 +245,10 @@ class PitchFlightGame {
   update(dt) {
     const canvasHeight = this.canvas.height / (window.devicePixelRatio || 1);
     
-    // 1. Fetch Pitch from audio engine
-    const pitchData = window.audioEngine.detectPitch({ minClarity: 0.62, noiseGate: 0.0026 });
+    // 1. Fetch Pitch from audio engine (using latency offset target note as guide)
+    const activeNoteForPitch = this.findNoteAtTime(this.gameTime - this.latencyOffset);
+    const targetMidiHint = activeNoteForPitch ? activeNoteForPitch.midi : null;
+    const pitchData = window.audioEngine.detectPitchForTuning(targetMidiHint, { minClarity: 0.52, noiseGate: 0.0024 });
 
     // Red damage flash border decrementor
     if (this.damageFlashTimer > 0) {
@@ -255,7 +263,12 @@ class PitchFlightGame {
       // Still detect pitch and move avatar so they can practice
       if (pitchData.frequency > 0) {
         this.timeSinceLastPitch = 0.0;
-        const clampedMidi = Math.max(this.minMidi, Math.min(this.maxMidi, pitchData.midi));
+        if (this.emaMidi === null) {
+          this.emaMidi = pitchData.midi;
+        } else {
+          this.emaMidi = (pitchData.midi * this.emaAlpha) + (this.emaMidi * (1 - this.emaAlpha));
+        }
+        const clampedMidi = Math.max(this.minMidi, Math.min(this.maxMidi, this.emaMidi));
         const pitchPercent = (clampedMidi - this.minMidi) / this.rangeMidi;
         this.avatarTargetY = canvasHeight * (1 - pitchPercent);
         this.flapVelocityY += (this.avatarTargetY - this.avatarY) * 0.11;
@@ -264,6 +277,7 @@ class PitchFlightGame {
         this.flapVelocityY *= 0.82;
         this.avatarGlowColor = '#00f2fe';
       } else {
+        this.emaMidi = null; // Reset EMA smoothing on silence
         this.timeSinceLastPitch += dt;
         if (this.timeSinceLastPitch < 0.35) {
           // Keep floating at last height during brief tracking losses
@@ -341,8 +355,13 @@ class PitchFlightGame {
 
     if (pitchData.frequency > 0) {
       this.timeSinceLastPitch = 0.0;
+      if (this.emaMidi === null) {
+        this.emaMidi = pitchData.midi;
+      } else {
+        this.emaMidi = (pitchData.midi * this.emaAlpha) + (this.emaMidi * (1 - this.emaAlpha));
+      }
       // Clamp pitch to user min/max range boundaries to keep character on screen
-      const clampedMidi = Math.max(this.minMidi, Math.min(this.maxMidi, pitchData.midi));
+      const clampedMidi = Math.max(this.minMidi, Math.min(this.maxMidi, this.emaMidi));
       const pitchPercent = (clampedMidi - this.minMidi) / this.rangeMidi;
       
       // Calculate target vertical height (invert Y because canvas is top-left originating)
@@ -366,6 +385,7 @@ class PitchFlightGame {
         this.vocalDiagnostics.vibratoHistory.shift();
       }
     } else {
+      this.emaMidi = null; // Reset EMA smoothing on silence
       this.timeSinceLastPitch += dt;
       if (this.timeSinceLastPitch < 0.35) {
         // Grace period: keep airplane floating at last target height with slow stabilization
@@ -392,16 +412,17 @@ class PitchFlightGame {
       });
     }
 
-    // 3. Collision / Note Pitch Matching Check
+    // 3. Collision / Note Pitch Matching Check (scored back in time to compensate for vocal tracking delay)
     // (Only award score and points if scroll is active and target matching is underway)
-    if (activeNote && shouldScroll) {
+    const scoringNote = this.findNoteAtTime(this.gameTime - this.latencyOffset);
+    if (scoringNote && shouldScroll) {
       this.totalActiveFrames++;
-      activeNote.totalFrames = (activeNote.totalFrames || 0) + 1;
+      scoringNote.totalFrames = (scoringNote.totalFrames || 0) + 1;
       let matched = false;
       
       if (pitchData.frequency > 0) {
         // Calculate cent distance from the target note
-        const centsDiff = window.audioEngine.getCentsDeviation(pitchData.frequency, activeNote.midi);
+        const centsDiff = window.audioEngine.getCentsDeviation(pitchData.frequency, scoringNote.midi);
         const absDiff = Math.abs(centsDiff);
         
         // Cents threshold (±50 cents is one semitone. Professional zone is ±15 cents, standard is ±40 cents)
@@ -430,15 +451,15 @@ class PitchFlightGame {
           }
           
           // Volume dynamics check
-          if (activeNote.dynamic) {
+          if (scoringNote.dynamic) {
             const vol = pitchData.volumePct || 0;
             let currentDyn = "mf";
             if (vol < 26) currentDyn = "piano";
             else if (vol < 56) currentDyn = "mf";
             else currentDyn = "forte";
             
-            if (activeNote.dynamic.toLowerCase() !== currentDyn) {
-              label = `SING ${activeNote.dynamic.toUpperCase()}! 🔊`;
+            if (scoringNote.dynamic.toLowerCase() !== currentDyn) {
+              label = `SING ${scoringNote.dynamic.toUpperCase()}! 🔊`;
               col = "var(--neon-red)";
               points = Math.round(points * 0.3); // 70% penalty for dynamics mismatch
             }
@@ -474,11 +495,11 @@ class PitchFlightGame {
 
       // Update per-note stats
       if (matched) {
-        activeNote.correctFrames = (activeNote.correctFrames || 0) + 1;
-        activeNote.currentStreakDuration = (activeNote.currentStreakDuration || 0) + dt;
-        activeNote.maxStreakDuration = Math.max(activeNote.maxStreakDuration || 0, activeNote.currentStreakDuration);
+        scoringNote.correctFrames = (scoringNote.correctFrames || 0) + 1;
+        scoringNote.currentStreakDuration = (scoringNote.currentStreakDuration || 0) + dt;
+        scoringNote.maxStreakDuration = Math.max(scoringNote.maxStreakDuration || 0, scoringNote.currentStreakDuration);
       } else {
-        activeNote.currentStreakDuration = 0;
+        scoringNote.currentStreakDuration = 0;
       }
 
       if (!matched && !this.isFreePlay) {
@@ -564,12 +585,27 @@ class PitchFlightGame {
       if (dynamicsEl) dynamicsEl.innerText = "--";
     }
 
-    // Stars representation on HUD
+    // Stars representation on HUD (scaled by difficulty)
     let starsStr = '';
     this.starsEarned = 0;
-    if (accuracy >= 35) this.starsEarned = 1;
-    if (accuracy >= 65) this.starsEarned = 2;
-    if (accuracy >= 85) this.starsEarned = 3;
+    
+    // Easier thresholds for Beginner levels, harder for Advanced
+    let threshold1 = 25, threshold2 = 55, threshold3 = 80;
+    if (this.difficulty === 'Beginner') {
+      threshold1 = 25; threshold2 = 55; threshold3 = 80;
+    } else if (this.difficulty === 'Easy') {
+      threshold1 = 30; threshold2 = 60; threshold3 = 85;
+    } else if (this.difficulty === 'Medium') {
+      threshold1 = 35; threshold2 = 65; threshold3 = 85;
+    } else if (this.difficulty === 'Hard') {
+      threshold1 = 40; threshold2 = 70; threshold3 = 90;
+    } else if (this.difficulty === 'Expert') {
+      threshold1 = 50; threshold2 = 75; threshold3 = 95;
+    }
+    
+    if (accuracy >= threshold1) this.starsEarned = 1;
+    if (accuracy >= threshold2) this.starsEarned = 2;
+    if (accuracy >= threshold3) this.starsEarned = 3;
 
     for (let i = 0; i < 3; i++) {
       if (i < this.starsEarned) starsStr += '<i class="fa-solid fa-star"></i>';
@@ -603,6 +639,29 @@ class PitchFlightGame {
     this.stars.forEach(star => {
       this.ctx.fillRect(star.x, star.y, star.size, star.size);
     });
+
+    // 1.5 Draw Horizontal vocal staff guidelines (glowing C notes)
+    this.ctx.save();
+    this.ctx.lineWidth = 1;
+    for (let m = this.minMidi; m <= this.maxMidi; m++) {
+      const isWholeNote = [0, 2, 4, 5, 7, 9, 11].includes(m % 12);
+      if (!isWholeNote) continue; // Skip sharps/flats for background cleanliness
+      
+      const mPercent = (m - this.minMidi) / this.rangeMidi;
+      const y = canvasHeight * (1 - mPercent);
+      const isC = (m % 12 === 0);
+      
+      this.ctx.strokeStyle = isC ? 'rgba(0, 242, 254, 0.12)' : 'rgba(255, 255, 255, 0.04)';
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(canvasWidth, y);
+      this.ctx.stroke();
+
+      this.ctx.fillStyle = isC ? 'rgba(0, 242, 254, 0.3)' : 'rgba(255, 255, 255, 0.12)';
+      this.ctx.font = '9px Outfit';
+      this.ctx.fillText(this.getNoteName(m), 15, y - 4);
+    }
+    this.ctx.restore();
 
     // 2. Draw Obstacle/Note Paths
     this.notes.forEach(note => {
@@ -647,9 +706,49 @@ class PitchFlightGame {
         this.ctx.font = 'bold 11px Outfit';
         this.ctx.fillText(note.name || this.getNoteName(note.midi), x + 10, y + 4);
         
+        // Draw Chord Symbol above the note bar if present
+        if (note.chord) {
+          this.ctx.save();
+          this.ctx.fillStyle = '#ffaa00';
+          this.ctx.font = 'bold 11px Outfit';
+          this.ctx.shadowBlur = isCurrent ? 8 : 0;
+          this.ctx.shadowColor = '#ffaa00';
+          this.ctx.fillText(`Strum ${note.chord}`, x + 5, y - height/2 - 6);
+          this.ctx.restore();
+        }
+        
         this.ctx.restore();
       }
     });
+
+    // 2.5 Draw Active Strum Chord banner at the top of the canvas
+    const activeNoteForVisual = this.findNoteAtTime(this.gameTime);
+    if (activeNoteForVisual && activeNoteForVisual.chord) {
+      this.ctx.save();
+      this.ctx.fillStyle = 'rgba(255, 170, 0, 0.08)';
+      this.ctx.strokeStyle = '#ffaa00';
+      this.ctx.lineWidth = 2;
+      this.ctx.shadowBlur = 15;
+      this.ctx.shadowColor = '#ffaa00';
+      
+      const badgeW = 140;
+      const badgeH = 34;
+      const badgeX = canvasWidth / 2 - badgeW / 2;
+      const badgeY = 12;
+      
+      this.ctx.beginPath();
+      this.ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 6);
+      this.ctx.fill();
+      this.ctx.stroke();
+      
+      this.ctx.shadowBlur = 0;
+      this.ctx.fillStyle = '#ffaa00';
+      this.ctx.font = 'bold 14px Outfit';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(`STRUM: ${activeNoteForVisual.chord}`, canvasWidth / 2, badgeY + badgeH / 2);
+      this.ctx.restore();
+    }
 
     // 3. Draw Avatar (Paper Airplane or Glowing Note)
     this.ctx.save();
@@ -842,18 +941,23 @@ class PitchFlightGame {
   }
 
   spawnHitParticles() {
-    const colors = ['#00f2fe', '#00ff87', '#60efff', '#ffffff'];
-    for (let i = 0; i < 2; i++) {
+    const colors = ['#00f2fe', '#00ff87', '#a200ff', '#ffffff'];
+    for (let i = 0; i < 6; i++) {
       this.particles.push({
         x: this.avatarX,
-        y: this.avatarY + (Math.random() * 10 - 5),
-        vx: -(Math.random() * 50 + 20),
-        vy: Math.random() * 60 - 30,
-        size: Math.random() * 3 + 1,
+        y: this.avatarY + (Math.random() * 14 - 7),
+        vx: -(Math.random() * 120 + 40), // fly backward faster
+        vy: Math.random() * 80 - 40,
+        size: Math.random() * 3.5 + 1,
         color: colors[Math.floor(Math.random() * colors.length)],
-        life: Math.random() * 0.4 + 0.2
+        life: Math.random() * 0.5 + 0.3
       });
     }
+  }
+
+  setLatencyOffset(value) {
+    this.latencyOffset = parseFloat(value) / 1000.0; // convert ms to seconds
+    console.log('[Game Engine] Latency offset set to (seconds):', this.latencyOffset);
   }
 
   getNoteName(midi) {

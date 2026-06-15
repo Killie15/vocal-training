@@ -29,6 +29,9 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Read app version
         id: version
         shell: bash
@@ -40,7 +43,9 @@ jobs:
           echo "tag=pulsebeat-v$VERSION_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Build debug APK
-        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          GRADLE_OPTS: -Dorg.gradle.daemon=false
 
       - name: Prepare release assets
         run: |

@@ -81,11 +81,10 @@ header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(7, 7, 15, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-dark); /* Solid background to prevent scrolling bleed under clock */
   border-bottom: 1px solid var(--border-glass);
   padding: 1rem 2rem;
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px)); /* Lift elements below notch and device status clock */
 }
 
 .header-container {
@@ -193,6 +192,16 @@ main {
   display: block;
 }
 
+#ukulele-canvas {
+  width: 100%;
+  min-height: 420px;
+  max-height: 720px;
+  border-radius: 12px;
+  background: #020206;
+  margin-bottom: 1.5rem;
+  box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.08);
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -230,6 +239,7 @@ main {
   cursor: pointer;
   transition: var(--transition-bounce);
   text-decoration: none;
+  min-height: 44px; /* iOS touch target minimum */
 }
 
 .btn-primary {
@@ -845,6 +855,7 @@ input[type="text"]:focus, select:focus {
   display: block;
   width: 100%;
   height: 480px; /* Default height */
+  max-height: 60vh; /* Responsive height based on viewport */
 }
 
 .game-overlay-message {
@@ -1428,13 +1439,13 @@ input[type="text"]:focus, select:focus {
 }
 
 /* Mobile-Responsive Optimizations */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   body, html {
     overflow-x: hidden;
     width: 100%;
   }
 
-  /* Mobile Bottom Navigation Bar */
+  /* Mobile Bottom Navigation Bar - Optimized to 4 grid columns, stacked layout */
   nav#main-nav {
     position: fixed !important;
     bottom: 0 !important;
@@ -1447,16 +1458,14 @@ input[type="text"]:focus, select:focus {
     border-top: 1px solid var(--border-glass) !important;
     border-bottom: none !important;
     z-index: 9999 !important;
-    padding: 0.6rem 1rem !important;
+    padding: 0 !important; /* Stretch buttons to full width */
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important; /* Account for bottom home indicator bar */
     margin: 0 !important;
-    display: flex !important;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    justify-content: flex-start !important;
-    gap: 0.8rem !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-    -webkit-overflow-scrolling: touch !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important; /* 4 columns */
+    overflow-x: hidden !important; /* No scroll needed! */
+    height: calc(65px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 0 !important;
   }
   
   nav#main-nav::-webkit-scrollbar {
@@ -1464,19 +1473,32 @@ input[type="text"]:focus, select:focus {
   }
 
   .nav-link {
-    flex-shrink: 0 !important;
-    padding: 0.4rem 0.8rem !important;
-    font-size: 0.85rem !important;
-    background: rgba(255, 255, 255, 0.02) !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    border-radius: 20px !important;
+    display: flex !important;
+    flex-direction: column !important; /* Stack icon on top of label */
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.5rem 0 !important;
+    font-size: 0.72rem !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    height: 100% !important;
+    color: var(--text-secondary) !important;
+    transition: var(--transition-smooth) !important;
+    min-height: 44px !important; /* iOS touch target minimum */
+  }
+
+  .nav-link i {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.25rem !important;
   }
 
   .nav-link.active {
-    border: 1px solid var(--neon-cyan) !important;
-    border-radius: 20px !important;
-    background: rgba(0, 242, 254, 0.1) !important;
-    box-shadow: 0 0 10px rgba(0, 242, 254, 0.2) !important;
+    color: var(--neon-cyan) !important;
+    background: rgba(0, 242, 254, 0.04) !important;
+    border: none !important;
+    border-top: 2.5px solid var(--neon-cyan) !important; /* Top tab border */
+    box-shadow: none !important;
   }
 
   header .header-container {
@@ -1485,7 +1507,7 @@ input[type="text"]:focus, select:focus {
   }
 
   body {
-    padding-bottom: 70px !important;
+    padding-bottom: calc(65px + env(safe-area-inset-bottom, 0px)) !important; /* Shift body up to accommodate taller nav bar and bottom safe area */
   }
 
   /* Fix welcome view typography overflow */
@@ -1506,11 +1528,13 @@ input[type="text"]:focus, select:focus {
   /* Adjust overall paddings */
   header {
     padding: 0.75rem 1rem !important;
+    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
   }
-  
+
   main {
     padding: 0 1rem !important;
     margin: 1rem auto !important;
+    min-height: calc(100vh - 130px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .glass-panel {
@@ -1556,7 +1580,7 @@ input[type="text"]:focus, select:focus {
   header {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: rgba(7, 7, 15, 0.95) !important;
+    background: var(--bg-dark) !important; /* Fully solid background to mask notch/status bar content scroll */
   }
 
   /* Shift floating status badge above the bottom mobile navigation bar */
@@ -1564,5 +1588,282 @@ input[type="text"]:focus, select:focus {
     bottom: 75px !important;
     right: 15px !important;
   }
+
+  /* Section title improvements */
+  .section-title {
+    font-size: 1.4rem !important;
+    margin-bottom: 0.8rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.25rem !important;
+  }
+  .section-title h1 {
+    font-size: 1.5rem !important;
+  }
+  .section-title p {
+    font-size: 0.85rem !important;
+    margin-top: 0.1rem !important;
+  }
+
+  /* Vocal Practice Studio mobile layout optimizations */
+  .studio-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  .studio-grid > .studio-analytics-panel {
+    order: 2 !important;
+    padding: 1rem !important;
+    gap: 0.75rem !important;
+  }
+  .studio-grid > .studio-graph-panel {
+    order: 1 !important;
+    padding: 1rem !important;
+    gap: 0.75rem !important;
+  }
+  #studio-timeline-canvas {
+    height: 180px !important;
+  }
+  .studio-mini-hud {
+    display: flex !important;
+  }
+
+  /* Karaoke Song Preset list and dropzone mobile optimizations */
+  .uploader-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  .uploader-grid > .uploader-presets-panel {
+    order: 1 !important;
+    padding: 1rem !important;
+  }
+  .uploader-grid > .uploader-local-panel {
+    order: 2 !important;
+    padding: 1rem !important;
+  }
+  .preset-song-list {
+    max-height: 240px !important;
+  }
+  .uploader-dropzone {
+    padding: 1.5rem 1rem !important;
+    gap: 0.5rem !important;
+  }
+  .uploader-dropzone h3 {
+    font-size: 1.05rem !important;
+  }
+
+  /* Karaoke Game Arena scaling and grid HUD */
+  .game-hud {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 0.4rem !important;
+    padding: 0.5rem !important;
+    border-radius: 8px !important;
+  }
+  .hud-item {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.1rem !important;
+    font-size: 0.75rem !important;
+    text-align: center;
+  }
+  .hud-item span {
+    font-size: 0.85rem !important;
+  }
+  .game-canvas {
+    height: 50vh !important;
+    max-height: 400px !important;
+    min-height: 250px !important;
+  }
+
+  /* Sheet music canvas scaling */
+  #sheet-canvas {
+    height: 200px !important;
+  }
 }
 
+/* Hub Card Hover Animations */
+.hub-card {
+  transition: var(--transition-bounce) !important;
+}
+.hub-card:hover {
+  transform: scale(1.025) translateY(-2px) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: var(--bg-card-hover) !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+}
+
+/* Mobile Landscape-Specific Layout Optimizations */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Slim down the bottom navigation menu */
+  nav#main-nav {
+    height: 48px !important;
+  }
+  
+  .nav-link {
+    flex-direction: row !important; /* Display icon and text side-by-side */
+    gap: 0.4rem !important;
+    padding: 0.15rem 0 !important;
+    font-size: 0.76rem !important;
+  }
+
+  .nav-link i {
+    font-size: 1.05rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  body {
+    padding-bottom: 60px !important;
+  }
+
+  /* Compress headers/section-titles */
+  .section-title {
+    margin-bottom: 0.5rem !important;
+    gap: 0.1rem !important;
+  }
+  
+  .section-title h1 {
+    font-size: 1.25rem !important;
+  }
+  
+  .section-title p {
+    display: none !important; /* Hide description lines to save viewport space */
+  }
+
+  .glass-panel {
+    padding: 0.8rem !important;
+  }
+
+  /* Practice Hub 2-column Grid */
+  .practice-hub-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.8rem !important;
+  }
+
+  .hub-card {
+    padding: 0.75rem 1rem !important;
+    gap: 1rem !important;
+    border-radius: 12px !important;
+  }
+
+  .hub-card div[style*="width: 60px"] {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 1.3rem !important;
+  }
+
+  .hub-card h2 {
+    font-size: 1.05rem !important;
+  }
+
+  .hub-card p {
+    font-size: 0.8rem !important;
+  }
+
+  /* Canvas Height Compress */
+  #studio-timeline-canvas {
+    height: 145px !important;
+  }
+
+  #sheet-canvas {
+    height: 150px !important;
+  }
+
+  .game-canvas {
+    height: 180px !important;
+  }
+
+  /* Tuner view dials in landscape */
+  .tuner-gauge-container {
+    max-width: 250px !important;
+    height: 120px !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .tuner-needle {
+    height: 90px !important;
+  }
+
+  .tuner-note-letter {
+    font-size: 2.8rem !important;
+  }
+
+  /* Calibration visual elements */
+  .pitch-bubble {
+    font-size: 2rem !important;
+    padding: 0.5rem 1.5rem !important;
+    min-height: 55px !important;
+  }
+}
+
+/* Split-Screen and Landscape Mode Optimizations */
+@media (orientation: landscape) {
+  /* Move navigation to side for better split-screen usage */
+  nav#main-nav {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: auto !important;
+    right: auto !important;
+    width: 60px !important;
+    height: 100vh !important;
+    flex-direction: column !important;
+    background: rgba(7, 7, 15, 0.95) !important;
+    border-right: 1px solid var(--border-glass) !important;
+    border-bottom: none !important;
+    padding: 1rem 0 !important;
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px)) !important;
+    z-index: 9999 !important;
+  }
+
+  .nav-link {
+    flex-direction: column !important;
+    padding: 1rem 0 !important;
+    width: 100% !important;
+    gap: 0.5rem !important;
+  }
+
+  .nav-link i {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .nav-link span {
+    font-size: 0.65rem !important;
+    writing-mode: vertical-rl !important;
+    text-orientation: mixed !important;
+  }
+
+  /* Adjust body padding for side navigation */
+  body {
+    padding-bottom: 0 !important;
+    padding-left: 60px !important;
+  }
+
+  /* Compact game mode for split-screen */
+  .game-canvas {
+    height: 70vh !important;
+    max-height: 500px !important;
+  }
+
+  /* Make game view more compact */
+  #game-view {
+    padding: 0.5rem !important;
+  }
+
+  /* Add quick exit button for game mode */
+  .game-exit-btn {
+    display: block !important;
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 10000 !important;
+    background: var(--bg-dark) !important;
+    border: 1px solid var(--border-glass) !important;
+    color: var(--text-secondary) !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+  }
+}

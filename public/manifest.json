@@ -1,13 +1,13 @@
 {
-  "name": "PitchFlight Vocal Trainer",
-  "short_name": "PitchFlight",
+  "name": "Vocal Trainer Pro",
+  "short_name": "VocalTrain",
   "description": "Gamified Professional Vocal Trainer & Tuner",
   "id": "/",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020206",
   "theme_color": "#020206",
-  "orientation": "any",
+  "orientation": "portrait",
   "categories": ["education", "music"],
   "lang": "en",
   "icons": [

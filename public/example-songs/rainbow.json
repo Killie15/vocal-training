@@ -1,0 +1,20 @@
+{
+  "title": "Somewhere Over The Rainbow",
+  "artist": "Israel Kamakawiwoʻole",
+  "tempo": 90,
+  "chords": [
+    { "name": "C", "startBeat": 0, "duration": 4 },
+    { "name": "C", "startBeat": 4, "duration": 4 },
+    { "name": "G", "startBeat": 8, "duration": 4 },
+    { "name": "G", "startBeat": 12, "duration": 4 },
+    { "name": "Am", "startBeat": 16, "duration": 4 },
+    { "name": "Am", "startBeat": 20, "duration": 4 },
+    { "name": "F", "startBeat": 24, "duration": 4 },
+    { "name": "F", "startBeat": 28, "duration": 4 },
+    { "name": "C", "startBeat": 32, "duration": 2 },
+    { "name": "G", "startBeat": 34, "duration": 2 },
+    { "name": "C", "startBeat": 36, "duration": 4 }
+  ],
+  "notes": "Perfect beginner-friendly ukulele song. Mostly open chords.",
+  "difficulty": "Beginner"
+}

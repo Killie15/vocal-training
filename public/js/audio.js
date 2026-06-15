@@ -14,11 +14,16 @@ class PitchAudioEngine {
     
     // Dynamic noise gate threshold (RMS amplitude)
     // ~ -45dB relative to full-scale 1.0 peak
-    this.noiseGateThreshold = 0.0035;
-    this.minClarityThreshold = 0.68;
+    this.noiseGateThreshold = 0.0025;
+    this.minClarityThreshold = 0.52;
+    this.hasCustomNoiseGate = false;
+    this.hasCustomMinClarity = false;
     
     // Notes names standard
     this.noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    
+    this.inputGain = 3.0; // Default 3x gain boost (approx +9.5 dB)
+    this.preamp = null;
   }
 
   // Requests microphone and initializes audio context graph with concurrency lock
@@ -62,6 +67,10 @@ class PitchAudioEngine {
         // Setup Web Audio Node graph
         const source = this.audioContext.createMediaStreamSource(this.micStream);
         
+        // Pre-amp GainNode to boost quiet microphones
+        this.preamp = this.audioContext.createGain();
+        this.preamp.gain.setValueAtTime(this.inputGain, this.audioContext.currentTime);
+
         // 1. DynamicsCompressorNode - Normalizes volume peaks across different mics
         this.compressor = this.audioContext.createDynamicsCompressor();
         this.compressor.threshold.setValueAtTime(-25, this.audioContext.currentTime);
@@ -74,9 +83,10 @@ class PitchAudioEngine {
         this.analyser = this.audioContext.createAnalyser();
         this.analyser.fftSize = this.fftSize;
 
-        // Connect nodes
-        source.connect(this.compressor);
-        this.compressor.connect(this.analyser);
+        // Feed analyser and compressor through preamp boost
+        source.connect(this.preamp);
+        this.preamp.connect(this.analyser);
+        this.preamp.connect(this.compressor);
 
         this.isListening = true;
         console.log('Audio Engine initialized at sample rate:', this.sampleRate);
@@ -108,7 +118,28 @@ class PitchAudioEngine {
     this.analyser = null;
     this.micStream = null;
     this.compressor = null;
+    this.preamp = null;
     console.log('Audio Engine stopped.');
+  }
+
+  setGain(value) {
+    this.inputGain = parseFloat(value);
+    if (this.preamp && this.audioContext) {
+      this.preamp.gain.setValueAtTime(this.inputGain, this.audioContext.currentTime);
+    }
+    console.log('[Audio Engine] Pre-amp gain set to:', this.inputGain);
+  }
+
+  setNoiseGate(value) {
+    this.noiseGateThreshold = parseFloat(value);
+    this.hasCustomNoiseGate = true;
+    console.log('[Audio Engine] Noise gate set to:', this.noiseGateThreshold);
+  }
+
+  setMinClarity(value) {
+    this.minClarityThreshold = parseFloat(value);
+    this.hasCustomMinClarity = true;
+    console.log('[Audio Engine] Min clarity threshold set to:', this.minClarityThreshold);
   }
 
   handleMicDisconnected() {
@@ -142,7 +173,7 @@ class PitchAudioEngine {
     const volumePct = Math.round(rms * 100);
 
     // If signal is too quiet, it's silence (Noise Gate)
-    const noiseGate = typeof options.noiseGate === 'number' ? options.noiseGate : this.noiseGateThreshold;
+    const noiseGate = this.hasCustomNoiseGate ? this.noiseGateThreshold : (typeof options.noiseGate === 'number' ? options.noiseGate : this.noiseGateThreshold);
     if (rms < noiseGate) {
       return { frequency: -1, note: "--", midi: -1, cents: 0, rms, volumePct: 0, clarity: 0 };
     }
@@ -179,17 +210,17 @@ class PitchAudioEngine {
     }
 
     // Find the zero crossing to skip the central correlation peak
-    let zeroCrossingIndex = 0;
-    for (let i = 0; i < this.fftSize - 1; i++) {
+    let zeroCrossingIndex = minLag;
+    for (let i = minLag; i < Math.min(maxLag, this.fftSize) - 1; i++) {
       if (r[i] > 0 && r[i + 1] < 0) {
         zeroCrossingIndex = i;
         break;
       }
     }
 
-    // Fallback: if no zero crossing is found (common in quiet/harmonic environments), find first local minimum
-    if (zeroCrossingIndex === 0) {
-      for (let i = 1; i < this.fftSize - 1; i++) {
+    // Fallback: if no zero crossing is found, find first local minimum (valley)
+    if (zeroCrossingIndex === minLag) {
+      for (let i = minLag + 1; i < Math.min(maxLag, this.fftSize) - 1; i++) {
         if (r[i] < r[i - 1] && r[i] < r[i + 1]) {
           zeroCrossingIndex = i;
           break;
@@ -197,15 +228,10 @@ class PitchAudioEngine {
       }
     }
 
-    // If still no valid index is found, autocorrelation failed (too chaotic)
-    if (zeroCrossingIndex === 0) {
-      return { frequency: -1, note: "--", midi: -1, cents: 0, rms, volumePct, clarity: 0 };
-    }
-
-    // Find the next maximum peak after the zero crossing / valley
+    // Find the highest peak in the vocal range after the valley/zero-crossing
     let peakValue = -1;
     let peakIndex = -1;
-    for (let i = zeroCrossingIndex; i < this.fftSize; i++) {
+    for (let i = zeroCrossingIndex; i < Math.min(maxLag, this.fftSize); i++) {
       if (r[i] > peakValue) {
         peakValue = r[i];
         peakIndex = i;
@@ -216,10 +242,21 @@ class PitchAudioEngine {
       return { frequency: -1, note: "--", midi: -1, cents: 0, rms, volumePct, clarity: 0 };
     }
 
+    // Octave correction: If there is a stronger peak at a harmonic (half the lag), prefer it
+    const harmonicLag = Math.round(peakIndex / 2);
+    if (
+      harmonicLag >= minLag &&
+      harmonicLag < peakIndex &&
+      r[harmonicLag] > peakValue * 0.88
+    ) {
+      peakIndex = harmonicLag;
+      peakValue = r[harmonicLag];
+    }
+
     // Calculate autocorrelation clarity/confidence score
     const clarity = peakValue / r0;
     // Reject pitches with low clarity to filter out noisy ambient environments (e.g. breath/hum noise)
-    const minClarity = typeof options.minClarity === 'number' ? options.minClarity : this.minClarityThreshold;
+    const minClarity = this.hasCustomMinClarity ? this.minClarityThreshold : (typeof options.minClarity === 'number' ? options.minClarity : this.minClarityThreshold);
     if (clarity < minClarity) {
       return { frequency: -1, note: "--", midi: -1, cents: 0, rms, volumePct: 0, clarity };
     }
@@ -272,6 +309,50 @@ class PitchAudioEngine {
   getCentsDeviation(frequency, targetMidi) {
     const targetFreq = this.midiToFreq(targetMidi);
     return Math.round(1200 * Math.log2(frequency / targetFreq));
+  }
+
+  // Tuning-friendly detection: relaxed gate + optional target hint for octave disambiguation.
+  detectPitchForTuning(targetMidi = null, options = {}) {
+    const detectOpts = {
+      minClarity: 0.48,
+      noiseGate: 0.002,
+      ...options
+    };
+    const raw = this.detectPitch(detectOpts);
+    if (raw.frequency <= 0) return raw;
+
+    if (targetMidi === null || targetMidi < 0) return raw;
+
+    const targetFreq = this.midiToFreq(targetMidi);
+    const candidates = [raw.frequency];
+    const half = raw.frequency / 2;
+    const double = raw.frequency * 2;
+    if (half >= 40) candidates.push(half);
+    if (double <= 2000) candidates.push(double);
+
+    let bestFreq = raw.frequency;
+    let bestAbsCents = Math.abs(this.getCentsDeviation(raw.frequency, targetMidi));
+    for (const freq of candidates) {
+      const absCents = Math.abs(this.getCentsDeviation(freq, targetMidi));
+      if (absCents < bestAbsCents) {
+        bestAbsCents = absCents;
+        bestFreq = freq;
+      }
+    }
+
+    if (bestFreq !== raw.frequency) {
+      const midiFloat = this.freqToMidi(bestFreq);
+      const midi = Math.round(midiFloat);
+      return {
+        ...raw,
+        frequency: bestFreq,
+        midi,
+        note: this.midiToNoteName(midi),
+        cents: Math.round((midiFloat - midi) * 100)
+      };
+    }
+
+    return raw;
   }
 
   // Polyphonic peak analysis to detect standard chords played on instruments
